@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
+import org.eclipse.tractusx.managedidentitywallets.dao.entity.MIWBaseEntity;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,7 +74,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public SpecificationUtil specificationUtil() {
+    public SpecificationUtil<MIWBaseEntity> specificationUtil() {
         return new SpecificationUtil<>();
     }
 

@@ -139,6 +139,8 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
      * @param callerBPN        the caller bpn
      * @return the credentials
      */
+
+    // TODO input as value object => CredentialSearchInput (holderIdentifier = identifier)
     public PageImpl<VerifiableCredential> getCredentials(String credentialId, String holderIdentifier, List<String> type, String sortColumn, String sortType, int pageNumber, int size, String callerBPN) {
         FilterRequest filterRequest = new FilterRequest();
         filterRequest.setSize(size);
