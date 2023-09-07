@@ -74,7 +74,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public SpecificationUtil<MIWBaseEntity> specificationUtil() {
+    public SpecificationUtil specificationUtil() {
         return new SpecificationUtil<>();
     }
 

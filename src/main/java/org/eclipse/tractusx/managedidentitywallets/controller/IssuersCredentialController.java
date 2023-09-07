@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredentialRequest;
+import org.eclipse.tractusx.managedidentitywallets.dto.IssuerVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.data.domain.PageImpl;
@@ -64,24 +65,18 @@ public class IssuersCredentialController extends BaseController implements Issue
      */
     @Override
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
-            String credentialId,
-            String holderIdentifier,
-            List<String> type,
-            int pageNumber,
-            int size,
-            String sortColumn,
-            String sortTpe,
+            IssuerVerifiableCredentialSearch issuerCredentialSearch,
             Principal principal
     ) {
         return ResponseEntity.status(HttpStatus.OK)
                              .body(issuersCredentialService.getCredentials(
-                                     credentialId,
-                                     holderIdentifier,
-                                     type,
-                                     sortColumn,
-                                     sortTpe,
-                                     pageNumber,
-                                     size,
+                                     issuerCredentialSearch.getCredentialId(),
+                                     issuerCredentialSearch.getHolderIdentifier(),
+                                     issuerCredentialSearch.getType(),
+                                     issuerCredentialSearch.getSortColumn(),
+                                     issuerCredentialSearch.getSortType(),
+                                     issuerCredentialSearch.getPageNumber(),
+                                     issuerCredentialSearch.getSize(),
                                      getBPNFromToken(principal)
                              ));
     }

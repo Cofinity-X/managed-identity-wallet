@@ -28,13 +28,13 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredentialRequest;
+import org.eclipse.tractusx.managedidentitywallets.dto.IssuerVerifiableCredentialSearch;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -228,21 +227,7 @@ public interface IssuersCredentialServiceControllerApi {
     @Operation(description = "Permission: **view_wallets** (The BPN of holderIdentifier must equal BPN of caller)\n\n Search verifiable credentials with filter criteria", summary = "Query Verifiable Credentials")
     @GetMapping(path = RestURI.ISSUERS_CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
-            @Parameter(name = "credentialId", description = "Credential Id", examples = {@ExampleObject(name = "Credential Id", value = "did:web:localhost:BPNL000000000000#12528899-160a-48bd-ba15-f396c3959ae9")}) @RequestParam(required = false) String credentialId,
-            @Parameter(name = "holderIdentifier", description = "Holder identifier(did of BPN)", examples = {@ExampleObject(name = "bpn", value = "BPNL000000000001", description = "bpn"), @ExampleObject(description = "did", name = "did", value = "did:web:localhost:BPNL000000000001")}) @RequestParam(required = false) String holderIdentifier,
-            @Parameter(name = "type", description = "Type of VC", examples = {@ExampleObject(name = "SummaryCredential", value = "SummaryCredential", description = "SummaryCredential"), @ExampleObject(description = "BpnCredential", name = "BpnCredential", value = "BpnCredential")}) @RequestParam(required = false) List<String> type,
-            @Min(0) @Max(Integer.MAX_VALUE) @Parameter(description = "Page number, Page number start with zero") @RequestParam(required = false, defaultValue = "0") int pageNumber,
-            @Min(0) @Max(Integer.MAX_VALUE) @Parameter(description = "Number of records per page") @RequestParam(required = false, defaultValue =
-                    Integer.MAX_VALUE + "") int size,
-            @Parameter(name = "sortColumn", description = "Sort column name",
-                    examples = {
-                            @ExampleObject(value = "createdAt", name = "creation date"),
-                            @ExampleObject(value = "holderDid", name = "Holder did"),
-                            @ExampleObject(value = "type", name = "Credential type"),
-                            @ExampleObject(value = "credentialId", name = "Credential id")
-                    }
-            ) @RequestParam(required = false, defaultValue = "createdAt") String sortColumn,
-            @Parameter(name = "sortTpe", description = "Sort order", examples = {@ExampleObject(value = "desc", name = "Descending order"), @ExampleObject(value = "asc", name = "Ascending order")}) @RequestParam(required = false, defaultValue = "desc") String sortTpe,
+            @Valid @ParameterObject IssuerVerifiableCredentialSearch issuerCredentialSearch,
             Principal principal
     );
 

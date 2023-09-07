@@ -23,24 +23,20 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Map;
 
 /**
  * The type Holders credential controller.
  */
-
-// TODO refactor openapi annotations to interface
-// TODO refactor requestParams as pojo
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Verifiable Credential - Holder")
@@ -52,34 +48,24 @@ public class HoldersCredentialController extends BaseController implements Holde
     /**
      * Gets credentials.
      *
-     * @param credentialId     the credential id
-     * @param issuerIdentifier the issuer identifier
-     * @param type             the type
-     * @param sortColumn       the sort column
-     * @param sortTpe          the sort tpe
+     * @param credentialSearch Pojo holding all query params, if any
      * @param principal        the principal
      * @return the credentials
      */
     @Override
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
-            final String credentialId,
-            final String issuerIdentifier,
-            final List<String> type,
-            final String sortColumn,
-            final String sortTpe,
-            final int pageNumber,
-            final int size,
+            HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal
     ) {
         return ResponseEntity.status(HttpStatus.OK)
                              .body(holdersCredentialService.getCredentials(
-                                     credentialId,
-                                     issuerIdentifier,
-                                     type,
-                                     sortColumn,
-                                     sortTpe,
-                                     pageNumber,
-                                     size,
+                                     credentialSearch.getCredentialId(),
+                                     credentialSearch.getIssuerIdentifier(),
+                                     credentialSearch.getType(),
+                                     credentialSearch.getSortColumn(),
+                                     credentialSearch.getSortType(),
+                                     credentialSearch.getPageNumber(),
+                                     credentialSearch.getSize(),
                                      getBPNFromToken(principal)
                              ));
     }
@@ -99,4 +85,6 @@ public class HoldersCredentialController extends BaseController implements Holde
         return ResponseEntity.status(HttpStatus.CREATED)
                              .body(holdersCredentialService.issueCredential(data, getBPNFromToken(principal)));
     }
+
+
 }
