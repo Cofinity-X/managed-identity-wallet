@@ -152,8 +152,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
      * @param callerBpn the caller bpn
      * @return the verifiable credential
      */
-    public VerifiableCredential issueCredential(Map<String, Object> data, String callerBpn) {
-        VerifiableCredential verifiableCredential = new VerifiableCredential(data);
+    public VerifiableCredential issueCredential(VerifiableCredential verifiableCredential, String callerBpn) {
         Wallet issuerWallet = commonService.getWalletByIdentifier(verifiableCredential.getIssuer().toString());
 
         //validate BPN access, Holder must be caller of API

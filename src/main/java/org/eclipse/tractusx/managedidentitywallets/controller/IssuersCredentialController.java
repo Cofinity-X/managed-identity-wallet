@@ -22,6 +22,8 @@
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
@@ -36,7 +38,10 @@ import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialServ
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -50,25 +55,19 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-public class IssuersCredentialController extends BaseController implements IssuersCredentialServiceControllerApi {
+public class IssuersCredentialController extends BaseController  {
 
     private final IssuersCredentialService issuersCredentialService;
 
 
     /**
      * Gets credentials.
-     *
-     * @param credentialId     the credential id
-     * @param holderIdentifier the holder identifier
-     * @param type             the type
-     * @param pageNumber       the page number
-     * @param size             the size
-     * @param sortColumn       the sort column
-     * @param sortTpe          the sort tpe
+     * @param issuerCredentialSearch object holding all query parameters including default values
      * @param principal        the principal
      * @return the credentials
      */
-    @Override
+    @GetMapping(path = RestURI.ISSUERS_CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             IssuerVerifiableCredentialSearch issuerCredentialSearch,
             Principal principal
@@ -104,7 +103,8 @@ public class IssuersCredentialController extends BaseController implements Issue
      * @param principal                        the principal
      * @return the response entity
      */
-    @Override
+    @PostMapping(path = RestURI.CREDENTIALS_ISSUER_MEMBERSHIP, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.IssueMembershipCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueMembershipCredential(
             IssueMembershipCredentialRequest issueMembershipCredentialRequest,
             Principal principal
@@ -123,7 +123,8 @@ public class IssuersCredentialController extends BaseController implements Issue
      * @param principal the principal
      * @return the response entity
      */
-    @Override
+    @PostMapping(path = RestURI.CREDENTIALS_ISSUER_DISMANTLER, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.IssueDismantlerCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueDismantlerCredential(
             IssueDismantlerCredentialRequest request,
             Principal principal
@@ -142,6 +143,8 @@ public class IssuersCredentialController extends BaseController implements Issue
      * @param principal the principal
      * @return the response entity
      */
+    @PostMapping(path = RestURI.API_CREDENTIALS_ISSUER_FRAMEWORK, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.IssueFrameworkCredentialApiDocs
     public ResponseEntity<VerifiableCredential> issueFrameworkCredential(
             IssueFrameworkCredentialRequest request,
             Principal principal
@@ -160,7 +163,8 @@ public class IssuersCredentialController extends BaseController implements Issue
      * @param withCredentialExpiryDate the with credential expiry date
      * @return the response entity
      */
-    @Override
+    @PostMapping(path = RestURI.CREDENTIALS_VALIDATION, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.ValidateVerifiableCredentialApiDocs
     public ResponseEntity<Map<String, Object>> credentialsValidation(
             Map<String, Object> data,
             boolean withCredentialExpiryDate
@@ -177,7 +181,8 @@ public class IssuersCredentialController extends BaseController implements Issue
      * @param principal the principal
      * @return the response entity
      */
-    @Override
+    @PostMapping(path = RestURI.ISSUERS_CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @IssuersCredentialControllerApiDocs.IssueVerifiableCredentialUsingBaseWalletApiDocs
     public ResponseEntity<VerifiableCredential> issueCredentialUsingBaseWallet(
             String holderDid,
             Map<String, Object> data,

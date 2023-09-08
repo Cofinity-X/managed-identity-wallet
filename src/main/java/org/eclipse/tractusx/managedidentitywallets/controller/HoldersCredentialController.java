@@ -23,6 +23,9 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
@@ -34,7 +37,10 @@ import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialServ
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -48,19 +54,20 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Verifiable Credential - Holder")
-public class HoldersCredentialController extends BaseController implements HoldersCredentialControllerApi {
+@Slf4j
+public class HoldersCredentialController extends BaseController {
 
     private final HoldersCredentialService holdersCredentialService;
-
 
     /**
      * Gets credentials.
      *
-     * @param credentialSearch Pojo holding all query params, if any
+     * @param credentialSearch object holding all query parameters including default values
      * @param principal        the principal
      * @return the credentials
      */
-    @Override
+    @GetMapping(path = RestURI.CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
+    @HoldersCredentialControllerApiDocs.GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal
@@ -82,7 +89,7 @@ public class HoldersCredentialController extends BaseController implements Holde
                      .withPageNumber(credentialSearch.getPageNumber())
                      .withPageSize(credentialSearch.getSize())
                      .withCallerBpn(new Identifier(getBPNFromToken(principal)));
-        
+
         return ResponseEntity.status(HttpStatus.OK)
                              .body(holdersCredentialService.getCredentials(
                                      searchBuilder.build()
@@ -96,16 +103,28 @@ public class HoldersCredentialController extends BaseController implements Holde
      * @param principal the principal
      * @return the response entity
      */
-
-    // TODO no, no, no, real DTO not just map, even though VerifiableCredential must be constructed with map, wtf
-    // !!! never pass input straight into domain !!!
-    @Override
+    @PostMapping(path = RestURI.CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @HoldersCredentialControllerApiDocs.IssueCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueCredential(
             Map<String, Object> data,
             Principal principal
     ) {
+        VerifiableCredential verifiableCredential = null;
+        try {
+            // validates the input (hopefully), then pass to domain
+            verifiableCredential = new VerifiableCredential(data);
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+
+        // TODO verfiy values of verifiableCredential
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(holdersCredentialService.issueCredential(data, getBPNFromToken(principal)));
+                             .body(holdersCredentialService.issueCredential(
+                                     verifiableCredential,
+                                     getBPNFromToken(principal)
+                             ));
     }
 
 
