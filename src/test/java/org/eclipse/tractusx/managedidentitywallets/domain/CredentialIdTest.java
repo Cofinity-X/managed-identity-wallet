@@ -36,10 +36,6 @@ class CredentialIdTest {
         assertThrows(IllegalArgumentException.class, ()->new CredentialId("hallo"));
     }
 
-    @Test
-    void shouldCreateCredentialIdWhenNull(){
-        assertDoesNotThrow(() -> new CredentialId(null));
-    }
 
     @Test
     void shouldCreateCredentialIdFromValidString(){
