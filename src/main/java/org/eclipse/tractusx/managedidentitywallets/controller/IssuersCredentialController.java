@@ -22,6 +22,12 @@
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.SortType;
+import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredentialRequest;
@@ -36,16 +42,15 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The type Issuers credential controller.
  */
 
-// TODO refactor requestParams as pojo
 @RestController
 @RequiredArgsConstructor
 public class IssuersCredentialController extends BaseController implements IssuersCredentialServiceControllerApi {
-
 
     private final IssuersCredentialService issuersCredentialService;
 
@@ -68,16 +73,27 @@ public class IssuersCredentialController extends BaseController implements Issue
             IssuerVerifiableCredentialSearch issuerCredentialSearch,
             Principal principal
     ) {
+
+        CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
+        Optional.ofNullable(issuerCredentialSearch.getCredentialId())
+                .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
+        Optional.ofNullable(issuerCredentialSearch.getHolderIdentifier())
+                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
+        Optional.ofNullable(issuerCredentialSearch.getType())
+                .ifPresent(t -> {
+                    List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
+                    searchBuilder.withTypesToSearch(l);
+                });
+
+        searchBuilder.withSortColumn(SortColumn.valueOfColumn(issuerCredentialSearch.getSortColumn()))
+                     .withSortType(SortType.valueOf(issuerCredentialSearch.getSortType()))
+                     .withPageNumber(issuerCredentialSearch.getPageNumber())
+                     .withPageSize(issuerCredentialSearch.getSize())
+                     .withCallerBpn(new Identifier(getBPNFromToken(principal)));
+
         return ResponseEntity.status(HttpStatus.OK)
                              .body(issuersCredentialService.getCredentials(
-                                     issuerCredentialSearch.getCredentialId(),
-                                     issuerCredentialSearch.getHolderIdentifier(),
-                                     issuerCredentialSearch.getType(),
-                                     issuerCredentialSearch.getSortColumn(),
-                                     issuerCredentialSearch.getSortType(),
-                                     issuerCredentialSearch.getPageNumber(),
-                                     issuerCredentialSearch.getSize(),
-                                     getBPNFromToken(principal)
+                                     searchBuilder.build()
                              ));
     }
 

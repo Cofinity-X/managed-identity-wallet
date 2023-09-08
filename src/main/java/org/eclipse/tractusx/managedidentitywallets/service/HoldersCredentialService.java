@@ -36,6 +36,8 @@ import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.exception.CredentialNotFoundProblem;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
 import org.eclipse.tractusx.managedidentitywallets.utils.CommonUtils;
@@ -45,12 +47,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The type Credential service.
@@ -97,36 +99,41 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
      */
 
     // TODO input as value object => CredentialSearchInput (holderIdentifier = identifier)
-    public PageImpl<VerifiableCredential> getCredentials(String credentialId, String issuerIdentifier, List<String> type, String sortColumn, String sortType, int pageNumber, int size, String callerBPN) {
+    public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {
         FilterRequest filterRequest = new FilterRequest();
-        filterRequest.setPage(pageNumber);
-        filterRequest.setSize(size);
+        filterRequest.setPage(credentialSearch.pageNumber());
+        filterRequest.setSize(credentialSearch.pageSize());
 
         //Holder must be caller of API
-        Wallet holderWallet = commonService.getWalletByIdentifier(callerBPN);
+        Wallet holderWallet = commonService.getWalletByIdentifier(credentialSearch.callerBpn().value());
         filterRequest.appendCriteria(StringPool.HOLDER_DID, Operator.EQUALS, holderWallet.getDid());
 
-        if (StringUtils.hasText(issuerIdentifier)) {
-            Wallet issuerWallet = commonService.getWalletByIdentifier(issuerIdentifier);
+        Optional.ofNullable(credentialSearch.identifier()).ifPresent(o -> {
+            Wallet issuerWallet = commonService.getWalletByIdentifier(o.value());
             filterRequest.appendCriteria(StringPool.ISSUER_DID, Operator.EQUALS, issuerWallet.getDid());
-        }
+        });
 
-        if (StringUtils.hasText(credentialId)) {
-            filterRequest.appendCriteria(StringPool.CREDENTIAL_ID, Operator.EQUALS, credentialId);
-        }
+        Optional.ofNullable(credentialSearch.credentialId())
+                .ifPresent(
+                        o -> filterRequest.appendCriteria(
+                                StringPool.CREDENTIAL_ID,
+                                Operator.EQUALS, o.value()
+                        )
+                );
+
         FilterRequest request = new FilterRequest();
-        if (!CollectionUtils.isEmpty(type)) {
+        if (!CollectionUtils.isEmpty(credentialSearch.typeToSearch())) {
             request.setPage(filterRequest.getPage());
             request.setSize(filterRequest.getSize());
             request.setCriteriaOperator(CriteriaOperator.OR);
-            for (String str : type) {
-                request.appendCriteria(StringPool.TYPE, Operator.CONTAIN, str);
+            for (TypeToSearch str : credentialSearch.typeToSearch()) {
+                request.appendCriteria(StringPool.TYPE, Operator.CONTAIN, str.value);
             }
         }
 
         Sort sort = new Sort();
-        sort.setColumn(sortColumn);
-        sort.setSortType(SortType.valueOf(sortType.toUpperCase()));
+        sort.setColumn(credentialSearch.sortColumn().value);
+        sort.setSortType(SortType.valueOf(credentialSearch.sortType().name()));
         filterRequest.setSort(sort);
         Page<HoldersCredential> filter = filter(filterRequest, request, CriteriaOperator.AND);
 
@@ -150,26 +157,39 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
         Wallet issuerWallet = commonService.getWalletByIdentifier(verifiableCredential.getIssuer().toString());
 
         //validate BPN access, Holder must be caller of API
-        Validate.isFalse(callerBpn.equals(issuerWallet.getBpn())).launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
+        Validate.isFalse(callerBpn.equals(issuerWallet.getBpn()))
+                .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // get Key
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(issuerWallet.getId());
 
         // Create Credential
-        HoldersCredential credential = CommonUtils.getHoldersCredential(verifiableCredential.getCredentialSubject().get(0),
-                verifiableCredential.getTypes(), issuerWallet.getDidDocument(),
-                privateKeyBytes, issuerWallet.getDid(),
-                verifiableCredential.getContext(), Date.from(verifiableCredential.getExpirationDate()), true);
+        HoldersCredential credential = CommonUtils.getHoldersCredential(
+                verifiableCredential.getCredentialSubject()
+                                    .get(0),
+                verifiableCredential.getTypes(),
+                issuerWallet.getDidDocument(),
+                privateKeyBytes,
+                issuerWallet.getDid(),
+                verifiableCredential.getContext(),
+                Date.from(verifiableCredential.getExpirationDate()),
+                true
+        );
 
         //Store Credential in holder table
         credential = create(credential);
 
-        log.debug("VC type of {} issued to bpn ->{}", StringEscapeUtils.escapeJava(verifiableCredential.getTypes().toString()), StringEscapeUtils.escapeJava(callerBpn));
+        log.debug(
+                "VC type of {} issued to bpn ->{}",
+                StringEscapeUtils.escapeJava(verifiableCredential.getTypes().toString()),
+                StringEscapeUtils.escapeJava(callerBpn)
+        );
         // Return VC
         return credential.getData();
     }
 
     private void isCredentialExistWithId(String holderDid, String credentialId) {
-        Validate.isFalse(holdersCredentialRepository.existsByHolderDidAndCredentialId(holderDid, credentialId)).launch(new CredentialNotFoundProblem("Credential ID: " + credentialId + " is not exists "));
+        Validate.isFalse(holdersCredentialRepository.existsByHolderDidAndCredentialId(holderDid, credentialId))
+                .launch(new CredentialNotFoundProblem("Credential ID: " + credentialId + " is not exists "));
     }
 }

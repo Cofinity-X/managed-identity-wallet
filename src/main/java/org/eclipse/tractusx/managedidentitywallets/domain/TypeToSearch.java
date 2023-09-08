@@ -41,6 +41,6 @@ public enum TypeToSearch {
                 return e;
             }
         }
-        return null;
+        throw new IllegalArgumentException("%s is not a known type".formatted(label));
     }
 }

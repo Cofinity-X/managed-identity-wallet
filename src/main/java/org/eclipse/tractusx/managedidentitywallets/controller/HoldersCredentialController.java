@@ -23,6 +23,12 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.SortType;
+import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
@@ -32,7 +38,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The type Holders credential controller.
@@ -57,16 +65,27 @@ public class HoldersCredentialController extends BaseController implements Holde
             HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal
     ) {
+
+        CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
+        Optional.ofNullable(credentialSearch.getCredentialId())
+                .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
+        Optional.ofNullable(credentialSearch.getIssuerIdentifier())
+                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
+        Optional.ofNullable(credentialSearch.getType())
+                .ifPresent(t -> {
+                    List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
+                    searchBuilder.withTypesToSearch(l);
+                });
+
+        searchBuilder.withSortColumn(SortColumn.valueOfColumn(credentialSearch.getSortColumn()))
+                     .withSortType(SortType.valueOf(credentialSearch.getSortType()))
+                     .withPageNumber(credentialSearch.getPageNumber())
+                     .withPageSize(credentialSearch.getSize())
+                     .withCallerBpn(new Identifier(getBPNFromToken(principal)));
+        
         return ResponseEntity.status(HttpStatus.OK)
                              .body(holdersCredentialService.getCredentials(
-                                     credentialSearch.getCredentialId(),
-                                     credentialSearch.getIssuerIdentifier(),
-                                     credentialSearch.getType(),
-                                     credentialSearch.getSortColumn(),
-                                     credentialSearch.getSortType(),
-                                     credentialSearch.getPageNumber(),
-                                     credentialSearch.getSize(),
-                                     getBPNFromToken(principal)
+                                     searchBuilder.build()
                              ));
     }
 
@@ -77,6 +96,9 @@ public class HoldersCredentialController extends BaseController implements Holde
      * @param principal the principal
      * @return the response entity
      */
+
+    // TODO no, no, no, real DTO not just map, even though VerifiableCredential must be constructed with map, wtf
+    // !!! never pass input straight into domain !!!
     @Override
     public ResponseEntity<VerifiableCredential> issueCredential(
             Map<String, Object> data,

@@ -49,6 +49,6 @@ public enum SortColumn {
                 return e;
             }
         }
-        return null;
+        throw new IllegalArgumentException("%s is not a known column".formatted(label));
     }
 }

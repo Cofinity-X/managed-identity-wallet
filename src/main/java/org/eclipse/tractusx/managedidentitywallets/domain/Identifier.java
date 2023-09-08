@@ -35,13 +35,13 @@ public class Identifier {
     private final String value;
 
     public Identifier(final String bpn) {
-        if (Objects.nonNull(bpn)) {
-            Pattern pattern = Pattern.compile(PATTERN);
-            Matcher matcher = pattern.matcher(bpn);
-            if (matcher.matches()) {
-                throw new IllegalArgumentException("BPN is not valid");
-            }
+
+        Pattern pattern = Pattern.compile(PATTERN);
+        Matcher matcher = pattern.matcher(bpn);
+        if (matcher.matches()) {
+            throw new IllegalArgumentException("BPN is not valid");
         }
+
 
         this.value = bpn;
     }

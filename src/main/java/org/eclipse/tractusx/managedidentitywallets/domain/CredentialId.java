@@ -21,7 +21,6 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,13 +34,13 @@ public class CredentialId {
     private static final String PATTERN = "^did:web:([a-z\\\\.]*):BPNL[0-9a-f]{12}\\b#[0-9a-f]{8}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-([0-9a-f]{12})$";
 
     public CredentialId(final String credentialId) {
-        if (Objects.nonNull(credentialId)) {
-            Pattern pattern = Pattern.compile(PATTERN);
-            Matcher matcher = pattern.matcher(credentialId);
-            if (!matcher.matches()) {
-                throw new IllegalArgumentException("credentialId is not valid");
-            }
+
+        Pattern pattern = Pattern.compile(PATTERN);
+        Matcher matcher = pattern.matcher(credentialId);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("credentialId is not valid");
         }
+
 
         this.value = credentialId;
     }
