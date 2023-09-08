@@ -21,6 +21,7 @@
 
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
+import com.smartsensesolutions.java.commons.sort.SortType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,6 @@ import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
-import org.eclipse.tractusx.managedidentitywallets.domain.SortType;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
@@ -84,8 +84,7 @@ public class HoldersCredentialController extends BaseController {
                     searchBuilder.withTypesToSearch(l);
                 });
 
-        searchBuilder.withSortColumn(SortColumn.valueOfColumn(credentialSearch.getSortColumn()))
-                     .withSortType(SortType.valueOf(credentialSearch.getSortType()))
+        searchBuilder.withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()), SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
                      .withPageNumber(credentialSearch.getPageNumber())
                      .withPageSize(credentialSearch.getSize())
                      .withCallerBpn(new Identifier(getBPNFromToken(principal)));

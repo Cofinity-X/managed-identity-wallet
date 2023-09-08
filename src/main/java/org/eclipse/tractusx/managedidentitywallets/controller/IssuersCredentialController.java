@@ -21,6 +21,7 @@
 
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
+import com.smartsensesolutions.java.commons.sort.SortType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
@@ -28,7 +29,6 @@ import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
-import org.eclipse.tractusx.managedidentitywallets.domain.SortType;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
@@ -62,32 +62,31 @@ public class IssuersCredentialController extends BaseController  {
 
     /**
      * Gets credentials.
-     * @param issuerCredentialSearch object holding all query parameters including default values
+     * @param credentialSearch object holding all query parameters including default values
      * @param principal        the principal
      * @return the credentials
      */
     @GetMapping(path = RestURI.ISSUERS_CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
     @IssuersCredentialControllerApiDocs.GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
-            IssuerVerifiableCredentialSearch issuerCredentialSearch,
+            IssuerVerifiableCredentialSearch credentialSearch,
             Principal principal
     ) {
 
         CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
-        Optional.ofNullable(issuerCredentialSearch.getCredentialId())
+        Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
-        Optional.ofNullable(issuerCredentialSearch.getHolderIdentifier())
+        Optional.ofNullable(credentialSearch.getHolderIdentifier())
                 .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
-        Optional.ofNullable(issuerCredentialSearch.getType())
+        Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
                     searchBuilder.withTypesToSearch(l);
                 });
 
-        searchBuilder.withSortColumn(SortColumn.valueOfColumn(issuerCredentialSearch.getSortColumn()))
-                     .withSortType(SortType.valueOf(issuerCredentialSearch.getSortType()))
-                     .withPageNumber(issuerCredentialSearch.getPageNumber())
-                     .withPageSize(issuerCredentialSearch.getSize())
+        searchBuilder.withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()), SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
+                     .withPageNumber(credentialSearch.getPageNumber())
+                     .withPageSize(credentialSearch.getSize())
                      .withCallerBpn(new Identifier(getBPNFromToken(principal)));
 
         return ResponseEntity.status(HttpStatus.OK)

@@ -21,6 +21,9 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
+import com.smartsensesolutions.java.commons.sort.Sort;
+import com.smartsensesolutions.java.commons.sort.SortType;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -35,9 +38,7 @@ public class CredentialSearch {
 
     private final List<TypeToSearch> typesToSearch;
 
-    private final SortColumn sortColumn;
-
-    private final SortType sortType;
+    private final Sort sort;
 
     private final int pageNumber;
 
@@ -49,8 +50,7 @@ public class CredentialSearch {
         credentialId = builder.id;
         identifier = builder.identifier;
         typesToSearch = builder.typesToSearch;
-        sortColumn = builder.sortColumn;
-        sortType = builder.sortType;
+        sort = builder.sort;
         pageNumber = builder.pageNumber;
         pageSize = builder.pageSize;
         callerBpn = builder.callerBpn;
@@ -68,12 +68,8 @@ public class CredentialSearch {
         return typesToSearch;
     }
 
-    public SortColumn sortColumn() {
-        return sortColumn;
-    }
-
-    public SortType sortType() {
-        return sortType;
+    public Sort sort() {
+        return sort;
     }
 
     public int pageNumber() {
@@ -100,9 +96,7 @@ public class CredentialSearch {
 
         private List<TypeToSearch> typesToSearch;
 
-        private SortColumn sortColumn;
-
-        private SortType sortType;
+        private Sort sort;
 
         private int pageNumber;
 
@@ -133,15 +127,15 @@ public class CredentialSearch {
             return this;
         }
 
-        public Builder withSortColumn(final SortColumn sortColumn) {
-            this.sortColumn = Objects.requireNonNull(sortColumn);
+        public Builder withSort(final SortColumn sortColumn, final SortType sortType) {
+            Objects.requireNonNull(sortColumn);
+            Objects.requireNonNull(sortType);
+            this.sort = new Sort();
+            this.sort.setSortType(com.smartsensesolutions.java.commons.sort.SortType.valueOf(sortType.name()));
+            this.sort.setColumn(sortColumn.value);
             return this;
         }
 
-        public Builder withSortType(SortType sortType) {
-            this.sortType = Objects.requireNonNull(sortType);
-            return this;
-        }
 
         public Builder withPageNumber(int pageNumber) {
             if (pageNumber < 0)
@@ -164,8 +158,7 @@ public class CredentialSearch {
 
         private void validate() throws IllegalStateException {
             try {
-                Objects.requireNonNull(sortColumn);
-                Objects.requireNonNull(sortType);
+                Objects.requireNonNull(sort);
                 Objects.requireNonNull(callerBpn);
             } catch (NullPointerException e) {
                 throw new IllegalStateException(e);

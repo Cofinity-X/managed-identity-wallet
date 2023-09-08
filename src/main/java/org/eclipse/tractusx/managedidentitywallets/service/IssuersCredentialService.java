@@ -142,20 +142,13 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Gets credentials.
      *
-     * @param credentialId     the credential id
-     * @param holderIdentifier the issuer identifier
-     * @param type             the type
-     * @param sortColumn       the sort column
-     * @param sortType         the sort type
-     * @param pageNumber       the page number
-     * @param size             the size
-     * @param callerBPN        the caller bpn
+     * @see org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch
+     * @param credentialSearch pojo holding all search parameters
      * @return the credentials
      */
 
     public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {
 
-        // TODO smartsense agnostic
         FilterRequest filterRequest = new FilterRequest();
         filterRequest.setSize(credentialSearch.pageSize());
         filterRequest.setPage(credentialSearch.pageNumber());
@@ -179,7 +172,6 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 );
 
 
-        // TODO smartsense agnostic
         FilterRequest request = new FilterRequest();
         if (!CollectionUtils.isEmpty(credentialSearch.typeToSearch())) {
             request.setPage(filterRequest.getPage());
@@ -190,11 +182,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             }
         }
 
-        // TODO smartsense agnostic
-        Sort sort = new Sort();
-        sort.setColumn(credentialSearch.sortColumn().value);
-        sort.setSortType(SortType.valueOf(credentialSearch.sortType().name()));
-        filterRequest.setSort(sort);
+        filterRequest.setSort(credentialSearch.sort());
         Page<IssuersCredential> filter = filter(filterRequest, request, CriteriaOperator.AND);
 
         List<VerifiableCredential> list = new ArrayList<>(filter.getContent().size());

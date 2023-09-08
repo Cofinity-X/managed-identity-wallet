@@ -89,16 +89,11 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
     /**
      * Gets list of holder's credentials
      *
-     * @param credentialId     the credentialId
-     * @param issuerIdentifier the issuer identifier
-     * @param type             the type
-     * @param sortColumn       the sort column
-     * @param sortType         the sort type
-     * @param callerBPN        the caller bpn
+     * @see org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch
+     * @param credentialSearch pojo holding all search parameters
      * @return the credentials
      */
 
-    // TODO input as value object => CredentialSearchInput (holderIdentifier = identifier)
     public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {
         FilterRequest filterRequest = new FilterRequest();
         filterRequest.setPage(credentialSearch.pageNumber());
@@ -131,10 +126,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
             }
         }
 
-        Sort sort = new Sort();
-        sort.setColumn(credentialSearch.sortColumn().value);
-        sort.setSortType(SortType.valueOf(credentialSearch.sortType().name()));
-        filterRequest.setSort(sort);
+        filterRequest.setSort(credentialSearch.sort());
         Page<HoldersCredential> filter = filter(filterRequest, request, CriteriaOperator.AND);
 
         List<VerifiableCredential> list = new ArrayList<>(filter.getContent().size());
