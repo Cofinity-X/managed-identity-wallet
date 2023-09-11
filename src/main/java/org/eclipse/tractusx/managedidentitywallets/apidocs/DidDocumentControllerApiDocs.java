@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.Parameter;
 
 public class DidDocumentControllerApiDocs {
 
@@ -136,6 +137,21 @@ public class DidDocumentControllerApiDocs {
     })
     @Operation(description = "Resolve the DID document for a given BPN", summary = "Resolve DID Document")
     public @interface GetDidResolveApiDocs {
+    }
+
+    @Parameter(description = "Did or BPN", examples = {
+            @ExampleObject(name = "bpn", value = "BPNL000000000000", description = "bpn"),
+            @ExampleObject(description = "did", name = "did", value = "did:web:localhost:BPNL000000000000") })
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface DidOrBpnParameterDoc {
+    }
+
+    @Parameter(description = "BPN", examples = {
+            @ExampleObject(name = "bpn", value = "BPNL000000000000", description = "bpn") })
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface BpnParameterDoc {
     }
 
 }
