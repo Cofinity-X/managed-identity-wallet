@@ -16,7 +16,7 @@ There are two possible flows, which can be used for development:
 Following tools the MIW development team used successfully:
 
 | Area     | Tool     | Download Link                                   | Comment                                                                                          |
-|----------|----------|-------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| -------- | -------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | IDE      | IntelliJ | https://www.jetbrains.com/idea/download/        | Use[envfile plugin](https://plugins.jetbrains.com/plugin/7861-envfile) to use the **local** flow |
 | Build    | Gradle   | https://gradle.org/install/                     |                                                                                                  |
 | Runtime  | Docker   | https://www.docker.com/products/docker-desktop/ |                                                                                                  |
@@ -31,55 +31,59 @@ Within the development setup the Keycloak instance is initially prepared with th
 values in `./dev-assets/docker-environment/keycloak`. The realm could also be
 manually added and configured at http://localhost:8080 via the "Add realm"
 button. It can be for example named `localkeycloak`. Also add an additional client,
-e.g. named `miw_private_client` with *valid redirect url* set to
+e.g. named `miw_private_client` with _valid redirect url_ set to
 `http://localhost:8080/*`. The roles
 
-* add_wallets
-* view_wallets
-* update_wallets
-* delete_wallets
-* view_wallet
-* update_wallet
-* manage_app
+- add_wallets
+- view_wallets
+- update_wallets
+- delete_wallets
+- view_wallet
+- update_wallet
+- manage_app
 
-Roles can be added under *Clients > miw_private_client > Roles* and then
-assigned to the client using *Clients > miw_private_client > Client Scopes*
-*> Service Account Roles > Client Roles > miw_private_client*.
+Roles can be added under _Clients > miw_private_client > Roles_ and then
+assigned to the client using _Clients > miw_private_client > Client Scopes_
+_> Service Account Roles > Client Roles > miw_private_client_.
 
 The available scopes/roles are:
 
 1. Role `add_wallets` to create a new wallet
 2. Role `view_wallets`:
 
-   * to get a list of all wallets
-   * to retrieve one wallet by its identifier
-   * to validate a Verifiable Credential
-   * to validate a Verifiable Presentation
-   * to get all stored Verifiable Credentials
+   - to get a list of all wallets
+   - to retrieve one wallet by its identifier
+   - to validate a Verifiable Credential
+   - to validate a Verifiable Presentation
+   - to get all stored Verifiable Credentials
+
 3. Role `update_wallets` for the following actions:
 
-   * to store Verifiable Credential
-   * to issue a Verifiable Credential
-   * to issue a Verifiable Presentation
+   - to store Verifiable Credential
+   - to issue a Verifiable Credential
+   - to issue a Verifiable Presentation
+
 4. Role `update_wallet`:
 
-   * to remove a Verifiable Credential
-   * to store a Verifiable Credential
-   * to issue a Verifiable Credential
-   * to issue a Verifiable Presentation
+   - to remove a Verifiable Credential
+   - to store a Verifiable Credential
+   - to issue a Verifiable Credential
+   - to issue a Verifiable Presentation
+
 5. Role `view_wallet` requires the BPN of Caller and it can be used:
 
-   * to get the Wallet of the related BPN
-   * to get stored Verifiable Credentials of the related BPN
-   * to validate any Verifiable Credential
-   * to validate any Verifiable Presentation
+   - to get the Wallet of the related BPN
+   - to get stored Verifiable Credentials of the related BPN
+   - to validate any Verifiable Credential
+   - to validate any Verifiable Presentation
+
 6. Role `manage_app` used to change the log level of the application at runtime. Check Logging in the application section for more
    details
 
 Overview by Endpoint
 
 | Artefact                                  | CRUD   | HTTP Verb/ Request | Endpoint                              | Roles                                        | Constraints                                                |
-|-------------------------------------------|--------|--------------------|---------------------------------------|----------------------------------------------|------------------------------------------------------------|
+| ----------------------------------------- | ------ | ------------------ | ------------------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
 | **Wallets**                               | Read   | GET                | /api/wallets                          | **view_wallets**                             |                                                            |
 | **Wallets**                               | Create | POST               | /api/wallets                          | **add_wallets**                              | **1 BPN : 1 WALLET**(PER ONE [1] BPN ONLY ONE [1] WALLET!) |
 | **Wallets**                               | Create | POST               | /api/wallets/{identifier}/credentials | **update_wallets** <br />OR**update_wallet** |                                                            |
@@ -98,14 +102,12 @@ Overview by Endpoint
 | **DIDDocument**                           | Read   | GET                | /{bpn}/did.json                       | N/A                                          |                                                            |
 | **DIDDocument**                           | Read   | GET                | /api/didDocuments/{identifier}        | N/A                                          |                                                            |
 
-
-
-Additionally, a Token mapper can be created under *Clients* &gt;
-*ManagedIdentityWallets* &gt; *Mappers* &gt; *create* with the following
+Additionally, a Token mapper can be created under _Clients_ &gt;
+_ManagedIdentityWallets_ &gt; _Mappers_ &gt; _create_ with the following
 configuration (using as an example `BPNL000000001`):
 
 | Key                                | Value           |
-|------------------------------------|-----------------|
+| ---------------------------------- | --------------- |
 | Name                               | StaticBPN       |
 | Mapper Type                        | Hardcoded claim |
 | Token Claim Name                   | BPN             |
@@ -117,7 +119,7 @@ configuration (using as an example `BPNL000000001`):
 | includeInAccessTokenResponse.label | ON              |
 
 If you receive an error message that the client secret is not valid, please go into
-keycloak admin and within *Clients > Credentials* recreate the secret.
+keycloak admin and within _Clients > Credentials_ recreate the secret.
 
 ## Development Setup
 
@@ -218,7 +220,7 @@ PostgreSQL and Keycloak Docker containers locally.
 Before running the tests, please ensure that you have Docker runtime installed and that you have the necessary
 permissions to run containers.
 
-Alternative, you can skip test during the build with `` ./gradlew clean build -x test``
+Alternative, you can skip test during the build with ` ./gradlew clean build -x test`
 
 #### 2. Database migration related issue
 
@@ -236,7 +238,7 @@ This process ensures that any issues with the database schema are resolved by re
 # Environment Variables `<a id= "environmentVariables"></a>`
 
 | name                            | description                                                                                  | default value                                                                                                                                       |
-|---------------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | APPLICATION_PORT                | port number of application                                                                   | 8080                                                                                                                                                |
 | APPLICATION_ENVIRONMENT         | Environment of the application ie. local, dev, int and prod                                  | local                                                                                                                                               |
 | DB_HOST                         | Database host                                                                                | localhost                                                                                                                                           |
@@ -249,7 +251,7 @@ This process ensures that any issues with the database schema are resolved by re
 | KEYCLOAK_MIW_PUBLIC_CLIENT      | Only needed if we want enable login with keyalock in swagger                                 | miw_public                                                                                                                                          |
 | MANAGEMENT_PORT                 | Spring actuator port                                                                         | 8090                                                                                                                                                |
 | MIW_HOST_NAME                   | Application host name, this will be used in creation of did ie. did:web:MIW_HOST_NAME:BPN    | localhost                                                                                                                                           |
-| ENCRYPTION_KEY                  | encryption key used to encrypt and decrypt private and public key of wallet                  |                                                                                                                                                     |
+| ENCRYPTION_KEY                  | path of the encryption key that used to encrypt and decrypt private and public key of wallet |                                                                                                                                                     |
 | AUTHORITY_WALLET_BPN            | base wallet BPN number                                                                       | BPNL000000000000                                                                                                                                    |
 | AUTHORITY_WALLET_NAME           | Base wallet name                                                                             | Catena-X                                                                                                                                            |
 | AUTHORITY_WALLET_DID            | Base wallet web did                                                                          | web:did:host:BPNL000000000000                                                                                                                       |
@@ -273,13 +275,13 @@ This process ensures that any issues with the database schema are resolved by re
 
 # Logging in application
 
-Log level in application can be set using environment variable ``APP_LOG_LEVEL``. Possible values
-are ``OFF, ERROR, WARN, INFO, DEBUG, TRACE`` and default value set to ``INFO``
+Log level in application can be set using environment variable `APP_LOG_LEVEL`. Possible values
+are `OFF, ERROR, WARN, INFO, DEBUG, TRACE` and default value set to `INFO`
 
 ### Change log level at runtime using Spring actuator
 
-We can use ``/actuator/loggers`` API endpoint of actuator for log related things. This end point can be accessible with
-role ``manage_app``. We can add this role to authority wallet client using keycloak as below:
+We can use `/actuator/loggers` API endpoint of actuator for log related things. This end point can be accessible with
+role `manage_app`. We can add this role to authority wallet client using keycloak as below:
 
 ![manage_app.png](docs%2Fmanage_app.png)
 
@@ -298,7 +300,9 @@ curl --location 'http://localhost:8090/actuator/loggers/{java package name}' \
 --header 'Authorization: Bearer access_token' \
 --data '{"configuredLevel":"INFO"}'
 ```
+
 i.e.
+
 ```bash
 curl --location 'http://localhost:8090/actuator/loggers/org.eclipse.tractusx.managedidentitywallets' \
 --header 'Content-Type: application/json' \
