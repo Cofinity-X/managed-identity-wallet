@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.DidOrBpnParameterDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.BpnParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidDocumentApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidResolveApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
@@ -56,9 +58,8 @@ public class DidDocumentController {
 
     @GetMapping(path = RestURI.DID_DOCUMENTS, produces = MediaType.APPLICATION_JSON_VALUE)
     @GetDidDocumentApiDocs
-    public ResponseEntity<DidDocument> getDidDocument(@Parameter(description = "Did or BPN", examples = {
-            @ExampleObject(name = "bpn", value = "BPNL000000000000", description = "bpn"),
-            @ExampleObject(description = "did", name = "did", value = "did:web:localhost:BPNL000000000000") }) @PathVariable(name = "identifier") String identifier) {
+    public ResponseEntity<DidDocument> getDidDocument(
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier) {
         return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(identifier));
     }
 
@@ -71,8 +72,7 @@ public class DidDocumentController {
 
     @GetMapping(path = RestURI.DID_RESOLVE, produces = MediaType.APPLICATION_JSON_VALUE)
     @GetDidResolveApiDocs
-    public ResponseEntity<DidDocument> getDidResolve(@Parameter(description = "BPN", examples = {
-            @ExampleObject(name = "bpn", value = "BPNL000000000000", description = "bpn") }) @PathVariable(name = "bpn") String bpn) {
+    public ResponseEntity<DidDocument> getDidResolve(@BpnParameterDoc @PathVariable(name = "bpn") String bpn) {
         return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(bpn));
     }
 }
