@@ -46,10 +46,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * @author Pascal Manaras
+ *         <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
 public class WalletAggregate {
-
 
     private final String host;
 
@@ -63,7 +63,6 @@ public class WalletAggregate {
 
     private final Did did;
 
-
     private WalletAggregate(Builder builder) {
         host = builder.host;
         bpn = builder.bpn;
@@ -73,12 +72,11 @@ public class WalletAggregate {
     }
 
     public String getEncryptedPublicKey(EncryptionUtils encryptionUtils) {
-        return encryptionUtils.encrypt(getPublicKeyString(keyPair.getPublicKey().asByte()));
+        return encryptionUtils.encrypt(getKeyString(keyPair.getPublicKey().asByte(), "PUBLIC KEY"));
     }
 
-
     public String getEncryptedPrivateKey(EncryptionUtils encryptionUtils) {
-        return encryptionUtils.encrypt(getPrivateKeyString(keyPair.getPrivateKey().asByte()));
+        return encryptionUtils.encrypt(getKeyString(keyPair.getPrivateKey().asByte(), "PRIVATE KEY"));
     }
 
     public Did getDid() {
@@ -89,7 +87,6 @@ public class WalletAggregate {
         return keyId;
     }
 
-
     public DidDocument getDocument() {
         JsonWebKey jwk = null;
 
@@ -99,14 +96,13 @@ public class WalletAggregate {
             throw new RuntimeException(e);
         }
 
-        JWKVerificationMethod jwkVerificationMethod =
-                new JWKVerificationMethodBuilder().did(did).jwk(jwk).build();
+        JWKVerificationMethod jwkVerificationMethod = new JWKVerificationMethodBuilder().did(did).jwk(jwk).build();
 
         DidDocumentBuilder didDocumentBuilder = new DidDocumentBuilder();
         didDocumentBuilder.id(did.toUri());
         didDocumentBuilder.verificationMethods(List.of(jwkVerificationMethod));
         DidDocument didDocument = didDocumentBuilder.build();
-        //modify context URLs
+        // modify context URLs
         List<URI> context = didDocument.getContext();
         List<URI> mutableContext = new ArrayList<>(context);
         contextUrls.forEach(uri -> {
@@ -120,20 +116,10 @@ public class WalletAggregate {
     }
 
     @SneakyThrows
-    private String getPrivateKeyString(byte[] privateKeyBytes) {
+    private String getKeyString(byte[] keyByte, String type) {
         StringWriter stringWriter = new StringWriter();
         PemWriter pemWriter = new PemWriter(stringWriter);
-        pemWriter.writeObject(new PemObject("PRIVATE KEY", privateKeyBytes));
-        pemWriter.flush();
-        pemWriter.close();
-        return stringWriter.toString();
-    }
-
-    @SneakyThrows
-    private String getPublicKeyString(byte[] publicKeyBytes) {
-        StringWriter stringWriter = new StringWriter();
-        PemWriter pemWriter = new PemWriter(stringWriter);
-        pemWriter.writeObject(new PemObject("PUBLIC KEY", publicKeyBytes));
+        pemWriter.writeObject(new PemObject(type, keyByte));
         pemWriter.flush();
         pemWriter.close();
         return stringWriter.toString();
@@ -159,7 +145,6 @@ public class WalletAggregate {
         private String bpn;
 
         private List<URI> contextUrls;
-
 
         public WalletAggregate build() throws IllegalStateException {
             validate();
