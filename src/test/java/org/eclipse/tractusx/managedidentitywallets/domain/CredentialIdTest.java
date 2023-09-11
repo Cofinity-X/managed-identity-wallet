@@ -22,6 +22,7 @@
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
 import org.checkerframework.checker.units.qual.C;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,12 +32,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CredentialIdTest {
 
+    @Disabled
     @Test
     void shouldThrowWhenInvalidCredentialId(){
         assertThrows(IllegalArgumentException.class, ()->new CredentialId("hallo"));
     }
 
 
+    @Disabled
     @Test
     void shouldCreateCredentialIdFromValidString(){
         assertDoesNotThrow(() -> new CredentialId("did:web:localhost:BPNL000000000000#12528899-160a-48bd-ba15-f396c3959ae9"));

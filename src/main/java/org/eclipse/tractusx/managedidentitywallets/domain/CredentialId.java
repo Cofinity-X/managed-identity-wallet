@@ -31,6 +31,8 @@ public class CredentialId {
 
     private final String value;
 
+
+    // TODO make regex accept this did:web:localhost%3A49243:4bc1b216-adbc-4a74-834c-b70196aae128
     private static final String PATTERN = "^did:web:([a-z\\\\.]*):BPNL[0-9a-f]{12}\\b#[0-9a-f]{8}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-([0-9a-f]{12})$";
 
     public CredentialId(final String credentialId) {
@@ -38,7 +40,7 @@ public class CredentialId {
         Pattern pattern = Pattern.compile(PATTERN);
         Matcher matcher = pattern.matcher(credentialId);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("credentialId is not valid");
+            throw new IllegalArgumentException("credentialId is %s not valid".formatted(credentialId));
         }
 
 

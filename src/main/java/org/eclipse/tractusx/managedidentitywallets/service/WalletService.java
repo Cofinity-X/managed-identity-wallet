@@ -27,7 +27,6 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.sort.Sort;
 import com.smartsensesolutions.java.commons.sort.SortType;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -41,18 +40,13 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.WalletKey;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.WalletAggregate;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
 import org.eclipse.tractusx.managedidentitywallets.exception.DuplicateWalletProblem;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
 import org.eclipse.tractusx.managedidentitywallets.utils.EncryptionUtils;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
-import org.eclipse.tractusx.ssi.lib.crypt.IKeyGenerator;
-import org.eclipse.tractusx.ssi.lib.crypt.KeyPair;
-import org.eclipse.tractusx.ssi.lib.crypt.jwk.JsonWebKey;
-import org.eclipse.tractusx.ssi.lib.crypt.x21559.x21559Generator;
-import org.eclipse.tractusx.ssi.lib.did.web.DidWebFactory;
-import org.eclipse.tractusx.ssi.lib.model.did.*;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredentialType;
 import org.springframework.data.domain.Page;
@@ -62,11 +56,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * The type Wallet service.
@@ -81,6 +73,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      * The constant BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN.
      */
     public static final String BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN = "Base wallet BPN is not matching with request BPN(from token)";
+
     private final WalletRepository walletRepository;
 
     private final MIWSettings miwSettings;
@@ -121,25 +114,30 @@ public class WalletService extends BaseService<Wallet, Long> {
         Wallet wallet = getWalletByIdentifier(identifier);
 
         //validate BPN access
-        Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn())).launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
+        Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
+                .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
 
         //check type
-        Validate.isTrue(verifiableCredential.getTypes().isEmpty()).launch(new BadDataException("Invalid types provided in credentials"));
+        Validate.isTrue(verifiableCredential.getTypes().isEmpty())
+                .launch(new BadDataException("Invalid types provided in credentials"));
 
         List<String> cloneTypes = new ArrayList<>(verifiableCredential.getTypes());
         cloneTypes.remove(VerifiableCredentialType.VERIFIABLE_CREDENTIAL);
 
         holdersCredentialRepository.save(HoldersCredential.builder()
-                .holderDid(wallet.getDid())
-                .issuerDid(verifiableCredential.getIssuer().toString())
-                .type(String.join(",", cloneTypes))
-                .data(verifiableCredential)
-                .selfIssued(false)
-                .stored(true)  //credential is stored(not issued by MIW)
-                .credentialId(verifiableCredential.getId().toString())
-                .build());
+                                                          .holderDid(wallet.getDid())
+                                                          .issuerDid(verifiableCredential.getIssuer().toString())
+                                                          .type(String.join(",", cloneTypes))
+                                                          .data(verifiableCredential)
+                                                          .selfIssued(false)
+                                                          .stored(true)  //credential is stored(not issued by MIW)
+                                                          .credentialId(verifiableCredential.getId().toString())
+                                                          .build());
         log.debug("VC type of {} stored for bpn ->{} with id-{}", cloneTypes, callerBpn, verifiableCredential.getId());
-        return Map.of("message", String.format("Credential with id %s has been successfully stored", verifiableCredential.getId()));
+        return Map.of(
+                "message",
+                String.format("Credential with id %s has been successfully stored", verifiableCredential.getId())
+        );
     }
 
 
@@ -161,7 +159,8 @@ public class WalletService extends BaseService<Wallet, Long> {
         // authority wallet can see all wallets
         if (!miwSettings.authorityWalletBpn().equals(callerBpn)) {
             //validate BPN access
-            Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn())).launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
+            Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
+                    .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
         }
 
         if (withCredentials) {
@@ -214,54 +213,36 @@ public class WalletService extends BaseService<Wallet, Long> {
     private Wallet createWallet(CreateWalletRequest request, boolean authority, String callerBpn) {
         validateCreateWallet(request, callerBpn);
 
-        //create private key pair
-        IKeyGenerator keyGenerator = new x21559Generator();
-        KeyPair keyPair = keyGenerator.generateKey();
+        WalletAggregate walletAggregate = WalletAggregate.builder()
+                                                         .withBpn(request.getBpn())
+                                                         .withHost(miwSettings.host())
+                                                         .withContextUrls(miwSettings.didDocumentContextUrls())
+                                                         .build();
 
-        //create did json
-        Did did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), request.getBpn());
-
-        String keyId = UUID.randomUUID().toString();
-
-        JsonWebKey jwk = new JsonWebKey(keyId, keyPair.getPublicKey(), keyPair.getPrivateKey());
-        JWKVerificationMethod jwkVerificationMethod =
-                new JWKVerificationMethodBuilder().did(did).jwk(jwk).build();
-
-        DidDocumentBuilder didDocumentBuilder = new DidDocumentBuilder();
-        didDocumentBuilder.id(did.toUri());
-        didDocumentBuilder.verificationMethods(List.of(jwkVerificationMethod));
-        DidDocument didDocument = didDocumentBuilder.build();
-        //modify context URLs
-        List<URI> context = didDocument.getContext();
-        List<URI> mutableContext = new ArrayList<>(context);
-        miwSettings.didDocumentContextUrls().forEach(uri -> {
-            if (!mutableContext.contains(uri)) {
-                mutableContext.add(uri);
-            }
-        });
-        didDocument.put("@context", mutableContext);
-        didDocument = DidDocument.fromJson(didDocument.toJson());
         log.debug("did document created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
+        String encryptedPrivateKey = walletAggregate.getEncryptedPrivateKey(encryptionUtils);
+        String encryptedPublicKey = walletAggregate.getEncryptedPublicKey(encryptionUtils);
 
         //Save wallet
         Wallet wallet = create(Wallet.builder()
-                .didDocument(didDocument)
-                .bpn(request.getBpn())
-                .name(request.getName())
-                .did(did.toUri().toString())
-                .algorithm(StringPool.ED_25519)
-                .build());
-
+                                     .didDocument(walletAggregate.getDocument())
+                                     .bpn(request.getBpn())
+                                     .name(request.getName())
+                                     .did(walletAggregate.getDid().toUri().toString())
+                                     .algorithm(StringPool.ED_25519)
+                                     .build());
 
         //Save key
         walletKeyService.getRepository().save(WalletKey.builder()
-                .walletId(wallet.getId())
-                .keyId(keyId)
-                .referenceKey("dummy ref key, removed once vault setup is ready")
-                .vaultAccessToken("dummy vault access token, removed once vault setup is ready")
-                .privateKey(encryptionUtils.encrypt(getPrivateKeyString(keyPair.getPrivateKey().asByte())))
-                .publicKey(encryptionUtils.encrypt(getPublicKeyString(keyPair.getPublicKey().asByte())))
-                .build());
+                                                       .walletId(wallet.getId())
+                                                       .keyId(walletAggregate.getKeyId())
+                                                       .referenceKey("dummy ref key, removed once vault setup is ready")
+                                                       .vaultAccessToken(
+                                                               "dummy vault access token, removed once vault setup is ready")
+                                                       .privateKey(encryptedPrivateKey)
+                                                       .publicKey(encryptedPublicKey)
+                                                       .build());
+
         log.debug("Wallet created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
 
         Wallet issuerWallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
@@ -275,24 +256,34 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Create authority wallet on application start up, skip if already created.
      */
-    @PostConstruct
+
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createAuthorityWallet() {
+
         if (!walletRepository.existsByBpn(miwSettings.authorityWalletBpn())) {
             CreateWalletRequest request = CreateWalletRequest.builder()
-                    .name(miwSettings.authorityWalletName())
-                    .bpn(miwSettings.authorityWalletBpn())
-                    .build();
+                                                             .name(miwSettings.authorityWalletName())
+                                                             .bpn(miwSettings.authorityWalletBpn())
+                                                             .build();
             createWallet(request, true, miwSettings.authorityWalletBpn());
-            log.info("Authority wallet created with bpn {}", StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
+            log.info(
+                    "Authority wallet created with bpn {}",
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn())
+            );
         } else {
-            log.info("Authority wallet exists with bpn {}", StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
+            log.info(
+                    "Authority wallet exists with bpn {}",
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn())
+            );
         }
+
+
     }
 
     private void validateCreateWallet(CreateWalletRequest request, String callerBpn) {
         // check base wallet
-        Validate.isFalse(callerBpn.equalsIgnoreCase(miwSettings.authorityWalletBpn())).launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
+        Validate.isFalse(callerBpn.equalsIgnoreCase(miwSettings.authorityWalletBpn()))
+                .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // check wallet already exists
         boolean exist = walletRepository.existsByBpn(request.getBpn());

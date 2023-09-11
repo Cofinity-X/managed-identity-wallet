@@ -23,6 +23,9 @@ package org.eclipse.tractusx.managedidentitywallets.utils;
 
 import lombok.SneakyThrows;
 import org.eclipse.tractusx.managedidentitywallets.config.MIWSettings;
+import org.eclipse.tractusx.ssi.lib.crypt.IKeyGenerator;
+import org.eclipse.tractusx.ssi.lib.crypt.KeyPair;
+import org.eclipse.tractusx.ssi.lib.crypt.x21559.x21559Generator;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -46,9 +49,9 @@ public class EncryptionUtils {
      */
     @SneakyThrows
     public EncryptionUtils(MIWSettings miwSettings) {
-        aesKey = new SecretKeySpec(miwSettings.encryptionKey().getBytes(), AES);
-
+        aesKey = miwSettings.encryptionKey();
     }
+
 
     /**
      * Encrypt string.

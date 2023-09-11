@@ -66,4 +66,6 @@ public class Wallet extends MIWBaseEntity {
 
     @Transient
     private List<VerifiableCredential> verifiableCredentials;
+
+
 }

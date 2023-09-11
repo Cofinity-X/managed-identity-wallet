@@ -50,7 +50,7 @@ public class TestContextInitializer implements ApplicationContextInitializer<Con
                 "server.port=" + port,
                 "miw.host: localhost:${server.port}",
                 "miw.enforceHttps=false",
-                "miw.encryptionKey="+ Base64.getEncoder().encodeToString(secretKey.getEncoded()),
+                "miw.encryptionKey=classpath:aes-key.bin",
                 "miw.authorityWalletBpn: BPNL000000000000",
                 "miw.authorityWalletName: Test-X",
                 "miw.authorityWalletDid: did:web:localhost%3A${server.port}:BPNL000000000000",
