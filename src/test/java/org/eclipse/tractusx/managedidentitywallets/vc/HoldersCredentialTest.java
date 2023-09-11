@@ -134,12 +134,10 @@ class HoldersCredentialTest {
 
     @Test
     void getCredentials200() throws com.fasterxml.jackson.core.JsonProcessingException {
-
-
         String baseDID = miwSettings.authorityWalletDid();
-        String bpn = UUID.randomUUID().toString();
+        String bpn = "BPNL000000000006";
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
         //save wallet
         TestUtils.createWallet(bpn, did, walletRepository);
         TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn());

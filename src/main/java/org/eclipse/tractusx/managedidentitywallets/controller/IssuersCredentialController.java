@@ -29,6 +29,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.HolderIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
@@ -83,7 +84,7 @@ public class IssuersCredentialController extends BaseController {
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getHolderIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new IssuerIdentifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new HolderIdentifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();

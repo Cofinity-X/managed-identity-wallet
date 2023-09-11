@@ -26,8 +26,6 @@ import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.criteria.CriteriaOperator;
 import com.smartsensesolutions.java.commons.operator.Operator;
-import com.smartsensesolutions.java.commons.sort.Sort;
-import com.smartsensesolutions.java.commons.sort.SortType;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +49,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -89,9 +86,9 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
     /**
      * Gets list of holder's credentials
      *
-     * @see org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch
      * @param credentialSearch pojo holding all search parameters
      * @return the credentials
+     * @see org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch
      */
 
     public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {
@@ -125,6 +122,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
                 request.appendCriteria(StringPool.TYPE, Operator.CONTAIN, str.value);
             }
         }
+
 
         filterRequest.setSort(credentialSearch.sort());
         Page<HoldersCredential> filter = filter(filterRequest, request, CriteriaOperator.AND);

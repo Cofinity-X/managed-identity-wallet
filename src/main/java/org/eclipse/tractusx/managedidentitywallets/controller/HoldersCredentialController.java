@@ -80,7 +80,7 @@ public class HoldersCredentialController extends BaseController {
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getIssuerIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new HolderIdentifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new IssuerIdentifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
