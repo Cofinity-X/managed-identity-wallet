@@ -27,24 +27,21 @@ import java.util.regex.Pattern;
 /**
  * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-public class CredentialId {
+public class HolderIdentifier implements Identifier{
+    private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPNL[0-9a-f]{12}$";
 
     private final String value;
 
-
-    // TODO make regex accept this did:web:localhost%3A49243:BPNL000000000000#a609938f-6d89-4e7f-aa40-9ca325c613be
-    private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPNL[0-9a-f]{12}\\b#[0-9a-f]{8}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-([0-9a-f]{12})$";
-
-    public CredentialId(final String credentialId) {
+    public HolderIdentifier(final String identifier) {
 
         Pattern pattern = Pattern.compile(PATTERN);
-        Matcher matcher = pattern.matcher(credentialId);
+        Matcher matcher = pattern.matcher(identifier);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("credentialId is %s not valid".formatted(credentialId));
+            throw new IllegalArgumentException("identifier %s is not valid".formatted(identifier));
         }
 
 
-        this.value = credentialId;
+        this.value = identifier;
     }
 
     public String value() {

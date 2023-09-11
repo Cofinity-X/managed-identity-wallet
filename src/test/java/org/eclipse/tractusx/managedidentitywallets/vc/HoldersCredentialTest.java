@@ -139,7 +139,7 @@ class HoldersCredentialTest {
         String baseDID = miwSettings.authorityWalletDid();
         String bpn = UUID.randomUUID().toString();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
         //save wallet
         TestUtils.createWallet(bpn, did, walletRepository);
         TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn());

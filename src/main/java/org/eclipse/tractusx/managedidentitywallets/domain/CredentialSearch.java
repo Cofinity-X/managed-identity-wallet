@@ -44,7 +44,7 @@ public class CredentialSearch {
 
     private final int pageSize;
 
-    private final Identifier callerBpn;
+    private final BPN callerBpn;
 
     private CredentialSearch(Builder builder) {
         credentialId = builder.id;
@@ -80,7 +80,7 @@ public class CredentialSearch {
         return pageSize;
     }
 
-    public Identifier callerBpn() {
+    public BPN callerBpn() {
         return callerBpn;
     }
 
@@ -102,7 +102,7 @@ public class CredentialSearch {
 
         private int pageSize;
 
-        private Identifier callerBpn;
+        private BPN callerBpn;
 
 
         public CredentialSearch build() throws IllegalStateException {
@@ -151,8 +151,8 @@ public class CredentialSearch {
             return this;
         }
 
-        public Builder withCallerBpn(Identifier identifier) {
-            this.callerBpn = identifier;
+        public Builder withCallerBpn(BPN BPN) {
+            this.callerBpn = BPN;
             return this;
         }
 

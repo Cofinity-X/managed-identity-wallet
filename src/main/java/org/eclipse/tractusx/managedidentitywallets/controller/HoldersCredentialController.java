@@ -27,9 +27,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.HolderIdentifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
@@ -42,7 +44,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -79,7 +80,7 @@ public class HoldersCredentialController extends BaseController {
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getIssuerIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new HolderIdentifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
@@ -89,7 +90,7 @@ public class HoldersCredentialController extends BaseController {
         searchBuilder.withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()), SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
                      .withPageNumber(credentialSearch.getPageNumber())
                      .withPageSize(credentialSearch.getSize())
-                     .withCallerBpn(new Identifier(getBPNFromToken(principal)));
+                     .withCallerBpn(new BPN(getBPNFromToken(principal)));
 
         return ResponseEntity.status(HttpStatus.OK)
                              .body(holdersCredentialService.getCredentials(

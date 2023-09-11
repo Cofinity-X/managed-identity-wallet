@@ -21,32 +21,9 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-public class Identifier {
-
-    private static final String PATTERN = "BPNL[0-9a-f]{12}";
-
-    private final String value;
-
-    public Identifier(final String bpn) {
-
-        Pattern pattern = Pattern.compile(PATTERN);
-        Matcher matcher = pattern.matcher(bpn);
-        if (matcher.matches()) {
-            throw new IllegalArgumentException("BPN is not valid");
-        }
-
-
-        this.value = bpn;
-    }
-
-    public String value() {
-        return value;
-    }
+public interface Identifier {
+    String value();
 }

@@ -52,7 +52,7 @@ The available scopes/roles are:
 2. Role `view_wallets`:
 
    * to get a list of all wallets
-   * to retrieve one wallet by its identifier
+   * to retrieve one wallet by its BPN
    * to validate a Verifiable Credential
    * to validate a Verifiable Presentation
    * to get all stored Verifiable Credentials
@@ -82,8 +82,8 @@ Overview by Endpoint
 |-------------------------------------------|--------|--------------------|---------------------------------------|----------------------------------------------|------------------------------------------------------------|
 | **Wallets**                               | Read   | GET                | /api/wallets                          | **view_wallets**                             |                                                            |
 | **Wallets**                               | Create | POST               | /api/wallets                          | **add_wallets**                              | **1 BPN : 1 WALLET**(PER ONE [1] BPN ONLY ONE [1] WALLET!) |
-| **Wallets**                               | Create | POST               | /api/wallets/{identifier}/credentials | **update_wallets** <br />OR**update_wallet** |                                                            |
-| **Wallets**                               | Read   | GET                | /api/wallets/{identifier}             | **view_wallets** OR<br />**view_wallet**     |                                                            |
+| **Wallets**                               | Create | POST               | /api/wallets/{BPN}/credentials | **update_wallets** <br />OR**update_wallet** |                                                            |
+| **Wallets**                               | Read   | GET                | /api/wallets/{BPN}             | **view_wallets** OR<br />**view_wallet**     |                                                            |
 | **Verifiable Presentations - Generation** | Create | POST               | /api/presentation                     | **update_wallets** OR<br />**update_wallet** |                                                            |
 | **Verifiable Presentations - Validation** | Create | POST               | /api/presentations/validation         | **view_wallets** OR<br />**view_wallet**     |                                                            |
 | **Verifiable Credential - Holder**        | Read   | GET                | /api/credentials                      | **view_wallets** OR<br />**view_wallet**     |                                                            |
@@ -96,7 +96,7 @@ Overview by Endpoint
 | **Verfiable Credential - Issuer**         | Create | POST               | /api/credentials/issuer/framework     | **update_wallets**                           |                                                            |
 | **Verfiable Credential - Issuer**         | Create | POST               | /api/credentials/issuer/distmantler   | **update_wallets**                           |                                                            |
 | **DIDDocument**                           | Read   | GET                | /{bpn}/did.json                       | N/A                                          |                                                            |
-| **DIDDocument**                           | Read   | GET                | /api/didDocuments/{identifier}        | N/A                                          |                                                            |
+| **DIDDocument**                           | Read   | GET                | /api/didDocuments/{BPN}        | N/A                                          |                                                            |
 
 
 

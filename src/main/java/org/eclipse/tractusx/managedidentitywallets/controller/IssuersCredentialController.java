@@ -26,9 +26,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
@@ -37,6 +38,7 @@ import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredential
 import org.eclipse.tractusx.managedidentitywallets.dto.IssuerVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
+
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -81,7 +83,7 @@ public class IssuersCredentialController extends BaseController {
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getHolderIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new IssuerIdentifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
@@ -94,7 +96,7 @@ public class IssuersCredentialController extends BaseController {
                      )
                      .withPageNumber(credentialSearch.getPageNumber())
                      .withPageSize(credentialSearch.getSize())
-                     .withCallerBpn(new Identifier(getBPNFromToken(principal)));
+                     .withCallerBpn(new BPN(getBPNFromToken(principal)));
 
         return ResponseEntity.status(HttpStatus.OK)
                              .body(issuersCredentialService.getCredentials(

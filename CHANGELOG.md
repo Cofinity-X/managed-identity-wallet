@@ -109,7 +109,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - add task to check, if helm-docs is installed (by Peter Motzko).
 - add task to rebuild Helm chart readme (by Peter Motzko).
 - Update readme (by Peter Motzko).
-- swagger doc updated as per new role in api and Retrieve wallet by identifier test cases updated (by Ronak Thacker).
+- swagger doc updated as per new role in api and Retrieve wallet by BPN test cases updated (by Ronak Thacker).
 - make Taskfile app namespace OS specific (by Peter Motzko).
 - add environment type switch (by Peter Motzko).
 - update .gitignore (by Peter Motzko).
@@ -144,7 +144,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - set health check actuator resp. liveliness probe endpoint to '/actuator/health/liveness' and readiness probe endpoint to '/actuator/health/readiness' both on port '8090' (by Mathias Knoop).
 - updated vc type (by Ronak Thacker).
 - adjust task 'stopDockerApp' to stop the actual container 'local_miw_app' (by Mathias Knoop).
-- Holder identifier added in framework VC subject (by Nitin Vavdiya).
+- Holder BPN added in framework VC subject (by Nitin Vavdiya).
 - framework VC name changes and test case changes (by Nitin Vavdiya).
 - adding generated 'README.md' to accompany the charts for 'Managed-Identity-Wallet' as required. (by Mathias Knoop).
 - add app setup for the stages 'dev' and 'int' in order to deploy the (new) 'Managed-Identity-Wallet' on these stages. (by Mathias Knoop).

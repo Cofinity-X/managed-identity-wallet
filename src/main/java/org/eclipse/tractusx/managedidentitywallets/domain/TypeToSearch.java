@@ -27,7 +27,8 @@ package org.eclipse.tractusx.managedidentitywallets.domain;
 public enum TypeToSearch {
 
     BPN_CREDENTIAL("BpnCredential"),
-    SUMMARY_CREDENTIAL("SummaryCredential");
+    SUMMARY_CREDENTIAL("SummaryCredential"),
+    MEMBERSHIP_CREDENTIAL("MembershipCredential");
 
     public final String value;
 
