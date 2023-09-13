@@ -21,9 +21,30 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * @author Pascal Manaras
+ *         <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-public interface Identifier {
-    String value();
+public class Identifier {
+    private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPNL[0-9a-f]{12}$";
+
+    private final String value;
+
+    public Identifier(final String identifier) {
+
+        Pattern pattern = Pattern.compile(PATTERN);
+        Matcher matcher = pattern.matcher(identifier);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("identifier %s is not valid".formatted(identifier));
+        }
+
+        this.value = identifier;
+    }
+
+    public String value() {
+        return value;
+    }
 }
