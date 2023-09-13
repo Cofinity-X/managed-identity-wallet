@@ -40,6 +40,7 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.WalletKey;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.WalletAggregate;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
@@ -209,7 +210,7 @@ public class WalletService extends BaseService<Wallet, Long> {
         validateCreateWallet(request, callerBpn);
 
         WalletAggregate walletAggregate = WalletAggregate.builder()
-                .withBpn(request.getBpn())
+                .withBpn(new BPN(request.getBpn()))
                 .withHost(miwSettings.host())
                 .withContextUrls(miwSettings.didDocumentContextUrls())
                 .build();

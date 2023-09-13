@@ -53,7 +53,7 @@ public class WalletAggregate {
 
     private final String host;
 
-    private final String bpn;
+    private final BPN bpn;
 
     private final List<URI> contextUrls;
 
@@ -68,7 +68,7 @@ public class WalletAggregate {
         bpn = builder.bpn;
         contextUrls = builder.contextUrls;
         keyPair = getKeyPair();
-        did = DidWebFactory.fromHostnameAndPath(host, bpn);
+        did = DidWebFactory.fromHostnameAndPath(host, bpn.value());
     }
 
     public String getEncryptedPublicKey(EncryptionUtils encryptionUtils) {
@@ -142,7 +142,7 @@ public class WalletAggregate {
 
         private String host;
 
-        private String bpn;
+        private BPN bpn;
 
         private List<URI> contextUrls;
 
@@ -157,7 +157,7 @@ public class WalletAggregate {
             return this;
         }
 
-        public Builder withBpn(final String bpn) {
+        public Builder withBpn(final BPN bpn) {
             this.bpn = Objects.requireNonNull(bpn);
             return this;
         }
