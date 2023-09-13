@@ -68,7 +68,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WalletService extends BaseService<Wallet, Long> {
 
-
     /**
      * The constant BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN.
      */
@@ -89,7 +88,6 @@ public class WalletService extends BaseService<Wallet, Long> {
     private final IssuersCredentialService issuersCredentialService;
 
     private final CommonService commonService;
-
 
     @Override
     protected BaseRepository<Wallet, Long> getRepository() {
@@ -113,11 +111,11 @@ public class WalletService extends BaseService<Wallet, Long> {
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
         Wallet wallet = getWalletByIdentifier(identifier);
 
-        //validate BPN access
+        // validate BPN access
         Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
                 .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
 
-        //check type
+        // check type
         Validate.isTrue(verifiableCredential.getTypes().isEmpty())
                 .launch(new BadDataException("Invalid types provided in credentials"));
 
@@ -125,21 +123,19 @@ public class WalletService extends BaseService<Wallet, Long> {
         cloneTypes.remove(VerifiableCredentialType.VERIFIABLE_CREDENTIAL);
 
         holdersCredentialRepository.save(HoldersCredential.builder()
-                                                          .holderDid(wallet.getDid())
-                                                          .issuerDid(verifiableCredential.getIssuer().toString())
-                                                          .type(String.join(",", cloneTypes))
-                                                          .data(verifiableCredential)
-                                                          .selfIssued(false)
-                                                          .stored(true)  //credential is stored(not issued by MIW)
-                                                          .credentialId(verifiableCredential.getId().toString())
-                                                          .build());
+                .holderDid(wallet.getDid())
+                .issuerDid(verifiableCredential.getIssuer().toString())
+                .type(String.join(",", cloneTypes))
+                .data(verifiableCredential)
+                .selfIssued(false)
+                .stored(true) // credential is stored(not issued by MIW)
+                .credentialId(verifiableCredential.getId().toString())
+                .build());
         log.debug("VC type of {} stored for bpn ->{} with id-{}", cloneTypes, callerBpn, verifiableCredential.getId());
         return Map.of(
                 "message",
-                String.format("Credential with id %s has been successfully stored", verifiableCredential.getId())
-        );
+                String.format("Credential with id %s has been successfully stored", verifiableCredential.getId()));
     }
-
 
     private Wallet getWalletByIdentifier(String identifier) {
         return commonService.getWalletByIdentifier(identifier);
@@ -158,7 +154,7 @@ public class WalletService extends BaseService<Wallet, Long> {
 
         // authority wallet can see all wallets
         if (!miwSettings.authorityWalletBpn().equals(callerBpn)) {
-            //validate BPN access
+            // validate BPN access
             Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
                     .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
         }
@@ -168,7 +164,6 @@ public class WalletService extends BaseService<Wallet, Long> {
         }
         return wallet;
     }
-
 
     /**
      * Gets wallets.
@@ -198,7 +193,6 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Wallet createWallet(CreateWalletRequest request, String callerBpn) {
         return createWallet(request, false, callerBpn);
     }
@@ -210,44 +204,45 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     private Wallet createWallet(CreateWalletRequest request, boolean authority, String callerBpn) {
         validateCreateWallet(request, callerBpn);
 
         WalletAggregate walletAggregate = WalletAggregate.builder()
-                                                         .withBpn(request.getBpn())
-                                                         .withHost(miwSettings.host())
-                                                         .withContextUrls(miwSettings.didDocumentContextUrls())
-                                                         .build();
+                .withBpn(request.getBpn())
+                .withHost(miwSettings.host())
+                .withContextUrls(miwSettings.didDocumentContextUrls())
+                .build();
 
         log.debug("did document created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
         String encryptedPrivateKey = walletAggregate.getEncryptedPrivateKey(encryptionUtils);
         String encryptedPublicKey = walletAggregate.getEncryptedPublicKey(encryptionUtils);
 
-        //Save wallet
+        // Save wallet
         Wallet wallet = create(Wallet.builder()
-                                     .didDocument(walletAggregate.getDocument())
-                                     .bpn(request.getBpn())
-                                     .name(request.getName())
-                                     .did(walletAggregate.getDid().toUri().toString())
-                                     .algorithm(StringPool.ED_25519)
-                                     .build());
+                .didDocument(walletAggregate.getDocument())
+                .bpn(request.getBpn())
+                .name(request.getName())
+                .did(walletAggregate.getDid().toUri().toString())
+                .algorithm(StringPool.ED_25519)
+                .build());
 
-        //Save key
+        // Save key
         walletKeyService.getRepository().save(WalletKey.builder()
-                                                       .walletId(wallet.getId())
-                                                       .keyId(walletAggregate.getKeyId())
-                                                       .referenceKey("dummy ref key, removed once vault setup is ready")
-                                                       .vaultAccessToken(
-                                                               "dummy vault access token, removed once vault setup is ready")
-                                                       .privateKey(encryptedPrivateKey)
-                                                       .publicKey(encryptedPublicKey)
-                                                       .build());
+                .walletId(wallet.getId())
+                .keyId(walletAggregate.getKeyId())
+                .referenceKey("dummy ref key, removed once vault setup is ready")
+                .vaultAccessToken(
+                        "dummy vault access token, removed once vault setup is ready")
+                .privateKey(encryptedPrivateKey)
+                .publicKey(encryptedPublicKey)
+                .build());
 
         log.debug("Wallet created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
 
         Wallet issuerWallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
 
-        //issue BPN credentials
+        // issue BPN credentials
         issuersCredentialService.issueBpnCredential(issuerWallet, wallet, authority);
 
         return wallet;
@@ -262,21 +257,18 @@ public class WalletService extends BaseService<Wallet, Long> {
 
         if (!walletRepository.existsByBpn(miwSettings.authorityWalletBpn())) {
             CreateWalletRequest request = CreateWalletRequest.builder()
-                                                             .name(miwSettings.authorityWalletName())
-                                                             .bpn(miwSettings.authorityWalletBpn())
-                                                             .build();
+                    .name(miwSettings.authorityWalletName())
+                    .bpn(miwSettings.authorityWalletBpn())
+                    .build();
             createWallet(request, true, miwSettings.authorityWalletBpn());
             log.info(
                     "Authority wallet created with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn())
-            );
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
         } else {
             log.info(
                     "Authority wallet exists with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn())
-            );
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
         }
-
 
     }
 
@@ -291,25 +283,4 @@ public class WalletService extends BaseService<Wallet, Long> {
             throw new DuplicateWalletProblem("Wallet is already exists for bpn " + request.getBpn());
         }
     }
-
-    @SneakyThrows
-    private String getPrivateKeyString(byte[] privateKeyBytes) {
-        StringWriter stringWriter = new StringWriter();
-        PemWriter pemWriter = new PemWriter(stringWriter);
-        pemWriter.writeObject(new PemObject("PRIVATE KEY", privateKeyBytes));
-        pemWriter.flush();
-        pemWriter.close();
-        return stringWriter.toString();
-    }
-
-    @SneakyThrows
-    private String getPublicKeyString(byte[] publicKeyBytes) {
-        StringWriter stringWriter = new StringWriter();
-        PemWriter pemWriter = new PemWriter(stringWriter);
-        pemWriter.writeObject(new PemObject("PUBLIC KEY", publicKeyBytes));
-        pemWriter.flush();
-        pemWriter.close();
-        return stringWriter.toString();
-    }
-
 }

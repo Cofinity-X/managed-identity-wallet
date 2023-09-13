@@ -21,40 +21,23 @@
 
 package org.eclipse.tractusx.managedidentitywallets.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * @author Pascal Manaras
+ *         <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
 @Component
 @ConfigurationPropertiesBinding
 public class EncryptionKeyConverter implements Converter<String, SecretKey> {
 
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
     @Override
     public SecretKey convert(final String source) {
-        System.out.println("%s source is".formatted(source));
-        Resource resource = applicationContext.getResource(source);
-        byte[] decodedKey;
-        try (InputStream inputStream = resource.getInputStream()) {
-            decodedKey = inputStream.readAllBytes();
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
-
-        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+        return new SecretKeySpec(source.getBytes(), 0, source.getBytes().length, "AES");
     }
 }

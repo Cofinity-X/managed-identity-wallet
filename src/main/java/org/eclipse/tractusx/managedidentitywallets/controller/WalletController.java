@@ -21,15 +21,18 @@
 
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.DidOrBpnParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.CreateWalletApiDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.PageNumberParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.RetrieveWalletApiDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.RetrieveWalletsApiDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SizeParameterDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SortColumnParameterDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SortTypeParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.StoreVerifiableCredentialApiDoc;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
@@ -78,9 +81,7 @@ public class WalletController extends BaseController {
     @PostMapping(path = RestURI.API_WALLETS_IDENTIFIER_CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @StoreVerifiableCredentialApiDoc
     public ResponseEntity<Map<String, String>> storeCredential(@RequestBody Map<String, Object> data,
-            @Parameter(description = "Did or BPN", examples = {
-                    @ExampleObject(name = "bpn", value = "BPNL000000000001", description = "bpn"),
-                    @ExampleObject(description = "did", name = "did", value = "did:web:localhost:BPNL000000000001") }) @PathVariable(name = "identifier") String identifier,
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier,
             Principal principal) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -96,9 +97,8 @@ public class WalletController extends BaseController {
      */
     @GetMapping(path = RestURI.API_WALLETS_IDENTIFIER, produces = MediaType.APPLICATION_JSON_VALUE)
     @RetrieveWalletApiDoc
-    public ResponseEntity<Wallet> getWalletByIdentifier(@Parameter(description = "Did or BPN", examples = {
-            @ExampleObject(name = "bpn", value = "BPNL000000000001", description = "bpn"),
-            @ExampleObject(description = "did", name = "did", value = "did:web:localhost:BPNL000000000001") }) @PathVariable(name = "identifier") String identifier,
+    public ResponseEntity<Wallet> getWalletByIdentifier(
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier,
             @RequestParam(name = "withCredentials", defaultValue = "false") boolean withCredentials,
             Principal principal) {
         return ResponseEntity.status(HttpStatus.OK)
@@ -114,18 +114,11 @@ public class WalletController extends BaseController {
     @GetMapping(path = RestURI.WALLETS, produces = MediaType.APPLICATION_JSON_VALUE)
     @RetrieveWalletsApiDoc
     public ResponseEntity<Page<Wallet>> getWallets(
-            @Parameter(name = "pageNumber", description = "Page number, Page number start with zero") @RequestParam(required = false, defaultValue = "0") int pageNumber,
-            @Parameter(name = "size", description = "Number of records per page") @RequestParam(required = false, defaultValue = Integer.MAX_VALUE
+            @PageNumberParameterDoc @RequestParam(required = false, defaultValue = "0") int pageNumber,
+            @SizeParameterDoc @RequestParam(required = false, defaultValue = Integer.MAX_VALUE
                     + "") int size,
-            @Parameter(name = "sortColumn", description = "Sort column name", examples = {
-                    @ExampleObject(value = "createdAt", name = "Creation date"),
-                    @ExampleObject(value = "name", name = "Wallet name"),
-                    @ExampleObject(value = "did", name = "Wallet did"),
-                    @ExampleObject(value = "bpn", name = "Wallet BPN")
-            }) @RequestParam(required = false, defaultValue = "createdAt") String sortColumn,
-            @Parameter(name = "sortTpe", description = "Sort order", examples = {
-                    @ExampleObject(value = "desc", name = "Descending order"),
-                    @ExampleObject(value = "asc", name = "Ascending order") }) @RequestParam(required = false, defaultValue = "desc") String sortTpe) {
+            @SortColumnParameterDoc @RequestParam(required = false, defaultValue = "createdAt") String sortColumn,
+            @SortTypeParameterDoc @RequestParam(required = false, defaultValue = "desc") String sortTpe) {
         return ResponseEntity.status(HttpStatus.OK).body(service.getWallets(pageNumber, size, sortColumn, sortTpe));
     }
 }
