@@ -34,6 +34,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
 import org.eclipse.tractusx.ssi.lib.crypt.ed25519.Ed25519Key;
@@ -110,7 +111,7 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
         List<Map<String, Object>> verifiableCredentialList = (List<Map<String, Object>>) data.get(StringPool.VERIFIABLE_CREDENTIALS);
 
         //check if holder wallet is in the system
-        Wallet callerWallet = commonService.getWalletByIdentifier(callerBpn);
+        Wallet callerWallet = commonService.getWalletByBPN(new BPN(callerBpn));
 
         List<VerifiableCredential> verifiableCredentials = new ArrayList<>(verifiableCredentialList.size());
         verifiableCredentialList.forEach(map -> {

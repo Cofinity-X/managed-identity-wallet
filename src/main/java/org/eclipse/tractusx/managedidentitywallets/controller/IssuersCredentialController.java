@@ -146,7 +146,7 @@ public class IssuersCredentialController extends BaseController {
 
         IssueDismantlerCredentialCommand cmd = IssueDismantlerCredentialCommand
                 .builder()
-                .withActivityType(ActivityType.valueOf(
+                .withActivityType(ActivityType.valueOfActivity(
                         request.getActivityType()))
                 .withBpn(new BPN(request.getBpn()))
                 .withCaller(getBPNFromToken(

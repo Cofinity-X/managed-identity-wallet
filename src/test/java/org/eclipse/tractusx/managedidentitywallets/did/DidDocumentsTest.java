@@ -28,6 +28,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.service.WalletService;
+import org.eclipse.tractusx.managedidentitywallets.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ class DidDocumentsTest {
     @Test
     void getDidDocumentWithBpn200() {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         createWallet(bpn);
 
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class, bpn);
@@ -77,7 +78,7 @@ class DidDocumentsTest {
     @Test
     void getDidResolveWithBpn200() {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
 
         createWallet(bpn);
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_RESOLVE, String.class, bpn);

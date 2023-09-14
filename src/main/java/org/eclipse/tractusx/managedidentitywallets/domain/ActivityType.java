@@ -33,7 +33,7 @@ public enum ActivityType {
         this.value = value;
     }
 
-    public static ActivityType valueOfColumn(String label) {
+    public static ActivityType valueOfActivity(String label) {
         for (ActivityType e : values()) {
             if (e.value.equals(label)) {
                 return e;

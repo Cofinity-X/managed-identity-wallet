@@ -85,7 +85,7 @@ class PresentationTest {
     @Test
     void validateVPAssJsonLd400() throws JsonProcessingException {
         //create VP
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
@@ -101,7 +101,7 @@ class PresentationTest {
 
     @Test
     void validateVPAsJwt() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
@@ -119,7 +119,7 @@ class PresentationTest {
     @Test
     void validateVPAsJwtWithInvalidSignatureAndInValidAudienceAndExpiryDateValidation() throws JsonProcessingException, DidDocumentResolverNotRegisteredException, JwtException, InterruptedException {
         //create VP
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
@@ -148,7 +148,7 @@ class PresentationTest {
     @Test
     void validateVPAsJwtWithValidAudienceAndDateValidation() throws JsonProcessingException {
         //create VP
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
@@ -165,7 +165,7 @@ class PresentationTest {
     @Test
     void validateVPAsJwtWithInValidVCDateValidation() throws JsonProcessingException {
         //create VP
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String audience = "companyA";
 
         ResponseEntity<Map> vpResponse = getIssueVPRequestWithShortExpiry(bpn, audience);
@@ -182,7 +182,7 @@ class PresentationTest {
 
     @Test
     void createPresentationAsJWT201() throws JsonProcessingException, ParseException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
@@ -212,7 +212,7 @@ class PresentationTest {
     @Test
     void createPresentationAsJsonLD201() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String didWeb = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
 
         Map<String, Object> request = getIssueVPRequest(bpn);
@@ -229,7 +229,7 @@ class PresentationTest {
 
     @Test
     void createPresentationWithInvalidBPNAccess403() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String didWeb = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
 
         Map<String, Object> request = getIssueVPRequest(bpn);
@@ -245,7 +245,7 @@ class PresentationTest {
 
     @NotNull
     private Map<String, Object> getIssueVPRequest(String bpn) throws JsonProcessingException {
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         ResponseEntity<String> response = TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn);
         Assertions.assertEquals(response.getStatusCode().value(), HttpStatus.CREATED.value());
         Wallet wallet = TestUtils.getWalletFromString(response.getBody());
@@ -264,13 +264,13 @@ class PresentationTest {
 
     @NotNull
     private ResponseEntity<Map> getIssueVPRequestWithShortExpiry(String bpn, String audience) throws JsonProcessingException {
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         ResponseEntity<String> response = TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn);
         Assertions.assertEquals(response.getStatusCode().value(), HttpStatus.CREATED.value());
         Wallet wallet = TestUtils.getWalletFromString(response.getBody());
 
         //create VC
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
         String type = VerifiableCredentialType.MEMBERSHIP_CREDENTIAL;
         Instant vcExpiry = Instant.now().minusSeconds(60);
         ResponseEntity<String> vcResponse = issueVC(wallet.getBpn(), wallet.getDid(), miwSettings.authorityWalletDid(), type, headers, miwSettings.vcContexts(), vcExpiry);

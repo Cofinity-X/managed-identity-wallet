@@ -39,6 +39,7 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.WalletKey;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.WalletAggregate;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
@@ -107,7 +108,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      */
     public Map<String, String> storeCredential(Map<String, Object> data, String identifier, BPN callerBpn) {
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
-        Wallet wallet = getWalletByIdentifier(identifier);
+        Wallet wallet = commonService.getWalletByDid(new Identifier(identifier));
 
         // validate BPN access
         Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
@@ -135,10 +136,6 @@ public class WalletService extends BaseService<Wallet, Long> {
                 String.format("Credential with id %s has been successfully stored", verifiableCredential.getId()));
     }
 
-    private Wallet getWalletByIdentifier(String identifier) {
-        return commonService.getWalletByIdentifier(identifier);
-    }
-
     /**
      * Gets wallet by identifier.
      *
@@ -148,7 +145,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet by identifier
      */
     public Wallet getWalletByIdentifier(String identifier, boolean withCredentials, BPN callerBpn) {
-        Wallet wallet = getWalletByIdentifier(identifier);
+        Wallet wallet = commonService.getWalletByDid(new Identifier(identifier));
 
         // authority wallet can see all wallets
         if (!miwSettings.authorityWalletBpn().equals(callerBpn.value())) {
@@ -238,7 +235,7 @@ public class WalletService extends BaseService<Wallet, Long> {
 
         log.debug("Wallet created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
 
-        Wallet issuerWallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
+        Wallet issuerWallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn().value());
 
         // issue BPN credentials
         issuersCredentialService.issueBpnCredential(issuerWallet, wallet, authority);
@@ -253,26 +250,26 @@ public class WalletService extends BaseService<Wallet, Long> {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createAuthorityWallet() {
 
-        if (!walletRepository.existsByBpn(miwSettings.authorityWalletBpn())) {
+        if (!walletRepository.existsByBpn(miwSettings.authorityWalletBpn().value())) {
             CreateWalletRequest request = CreateWalletRequest.builder()
                     .name(miwSettings.authorityWalletName())
-                    .bpn(miwSettings.authorityWalletBpn())
+                    .bpn(miwSettings.authorityWalletBpn().value())
                     .build();
-            createWallet(request, true, new BPN(miwSettings.authorityWalletBpn()));
+            createWallet(request, true, new BPN(miwSettings.authorityWalletBpn().value()));
             log.info(
                     "Authority wallet created with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value()));
         } else {
             log.info(
                     "Authority wallet exists with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value()));
         }
 
     }
 
     private void validateCreateWallet(CreateWalletRequest request, BPN callerBpn) {
         // check base wallet
-        Validate.isFalse(callerBpn.value().equalsIgnoreCase(miwSettings.authorityWalletBpn()))
+        Validate.isFalse(callerBpn.value().equalsIgnoreCase(miwSettings.authorityWalletBpn().value()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // check wallet already exists

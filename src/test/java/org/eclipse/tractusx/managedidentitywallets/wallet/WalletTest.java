@@ -35,6 +35,7 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.WalletKey;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletKeyRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.service.WalletService;
 import org.eclipse.tractusx.managedidentitywallets.utils.AuthenticationUtils;
@@ -88,15 +89,15 @@ class WalletTest {
     @Test
     void createDuplicateAuthorityWalletTest() {
         walletService.createAuthorityWallet();
-        int count = walletRepository.countByBpn(miwSettings.authorityWalletBpn());
+        int count = walletRepository.countByBpn(miwSettings.authorityWalletBpn().value());
         Assertions.assertEquals(1, count);
     }
 
     @Test
     void authorityWalletExistTest() {
-        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
+        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn().value());
         Assertions.assertNotNull(wallet);
-        Assertions.assertEquals(wallet.getBpn(), miwSettings.authorityWalletBpn());
+        Assertions.assertEquals(new BPN(wallet.getBpn()), miwSettings.authorityWalletBpn());
         Assertions.assertEquals(wallet.getName(), miwSettings.authorityWalletName());
         Assertions.assertNotNull(wallet.getDidDocument());
 
@@ -109,7 +110,7 @@ class WalletTest {
 
     @Test
     void createWalletTest403() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Wallet";
         HttpHeaders headers = AuthenticationUtils.getInvalidUserHttpHeaders();
 
@@ -123,7 +124,7 @@ class WalletTest {
 
     @Test
     void createWalletTestWithUserToken403() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Wallet";
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
 
@@ -139,9 +140,9 @@ class WalletTest {
     @Test
     void createWalletTest201() throws JsonProcessingException, JSONException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Wallet";
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         ResponseEntity<String> response = TestUtils.createWallet(bpn, name, restTemplate, baseBpn);
         Assertions.assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
@@ -199,9 +200,9 @@ class WalletTest {
     @Test
     void storeCredentialsTest201() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         TestUtils.createWallet(bpn, "name", restTemplate, baseBpn);
 
@@ -277,9 +278,9 @@ class WalletTest {
     @Test
     void storeCredentialsWithDifferentHolder403() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         TestUtils.createWallet(bpn, "name", restTemplate, baseBpn);
 
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders("Some random pbn");
@@ -293,9 +294,9 @@ class WalletTest {
     @Test
     void createWalletWithDuplicateBpn409() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Wallet";
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //save wallet
         ResponseEntity<String> response = TestUtils.createWallet(bpn, name, restTemplate, baseBpn);
@@ -309,7 +310,7 @@ class WalletTest {
 
     @Test
     void getWalletByIdentifierTest403() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         HttpHeaders headers = AuthenticationUtils.getInvalidUserHttpHeaders();
 
         HttpEntity<CreateWalletRequest> entity = new HttpEntity<>(headers);
@@ -321,8 +322,8 @@ class WalletTest {
 
     @Test
     void getWalletByIdentifierWithInvalidBPNTest403() {
-        String bpn = UUID.randomUUID().toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String bpn = TestUtils.randomBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         TestUtils.createWallet(bpn, "sample name", restTemplate, baseBpn);
 
@@ -337,9 +338,9 @@ class WalletTest {
 
     @Test
     void getWalletByIdentifierBPNTest200() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Name";
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //Create entry
         Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, name, restTemplate, baseBpn).getBody());
@@ -360,10 +361,10 @@ class WalletTest {
 
     @Test
     void getWalletByIdentifierBPNWithCredentialsTest200() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Name";
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //Create entry
         Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, name, restTemplate, baseBpn).getBody());
@@ -390,9 +391,9 @@ class WalletTest {
     @Disabled("the endpoint has an issue that prevents resolving did with a port number")
     void getWalletByIdentifierDidTest200() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Name";
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //Create entry
         Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, name, restTemplate, baseBpn).getBody());
@@ -435,9 +436,9 @@ class WalletTest {
     @Test
     void getWallets200() throws JsonProcessingException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String name = "Sample Name";
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         //Create entry
         TestUtils.createWallet(bpn, name, restTemplate, baseBpn);
 

@@ -23,9 +23,8 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.DidOrBpnParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.BpnParameterDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.DidOrBpnParameterDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidDocumentApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidResolveApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
@@ -47,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "DIDDocument")
 public class DidDocumentController {
+
     private final DidDocumentService service;
 
     /**
@@ -57,10 +57,15 @@ public class DidDocumentController {
      */
 
     @GetMapping(path = RestURI.DID_DOCUMENTS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @GetDidDocumentApiDocs
+    @GetDidDocumentApiDocs // TODO support did and bpn
     public ResponseEntity<DidDocument> getDidDocument(
-            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new Identifier(identifier)));
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier
+    ) {
+        if (identifier.startsWith("did:")) {
+            return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new Identifier(identifier)));
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new BPN(identifier)));
+        }
     }
 
     /**

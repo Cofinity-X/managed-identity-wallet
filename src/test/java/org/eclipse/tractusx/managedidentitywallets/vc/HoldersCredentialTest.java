@@ -86,7 +86,7 @@ class HoldersCredentialTest {
 
     @Test
     void issueCredentialTestWithInvalidBPNAccess403() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         String type = "TestCredential";
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders("not valid BPN");
@@ -100,7 +100,7 @@ class HoldersCredentialTest {
 
     @Test
     void issueCredentialTest200() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         String type = "TestCredential";
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
@@ -140,7 +140,7 @@ class HoldersCredentialTest {
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
         //save wallet
         TestUtils.createWallet(bpn, did, walletRepository);
-        TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn());
+        TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn().value());
         String vcList = """
                 [
                 {"type":"TraceabilityCredential"},
@@ -155,7 +155,7 @@ class HoldersCredentialTest {
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             IssueFrameworkCredentialRequest request = TestUtils.getIssueFrameworkCredentialRequest(bpn, jsonObject.get(StringPool.TYPE).toString());
-            HttpEntity<IssueFrameworkCredentialRequest> entity = new HttpEntity<>(request, AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn())); //ony base wallet can issue VC
+            HttpEntity<IssueFrameworkCredentialRequest> entity = new HttpEntity<>(request, AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value())); //ony base wallet can issue VC
             ResponseEntity<String> exchange = restTemplate.exchange(RestURI.API_CREDENTIALS_ISSUER_FRAMEWORK, HttpMethod.POST, entity, String.class);
             Assertions.assertEquals(exchange.getStatusCode().value(), HttpStatus.CREATED.value());
         }
@@ -301,10 +301,10 @@ class HoldersCredentialTest {
 
 
     private Map<String, Object> issueVC() throws JsonProcessingException {
-        String bpn = UUID.randomUUID().toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String bpn = TestUtils.randomBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         TestUtils.createWallet(bpn, "Test", restTemplate, baseBpn);
-        ResponseEntity<String> vc = TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn());
+        ResponseEntity<String> vc = TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn().value());
         VerifiableCredential verifiableCredential = new VerifiableCredential(new ObjectMapper().readValue(vc.getBody(), Map.class));
         Map<String, Object> map = objectMapper.readValue(verifiableCredential.toJson(), Map.class);
         return map;
@@ -312,7 +312,7 @@ class HoldersCredentialTest {
 
 
     private ResponseEntity<String> issueVC(String bpn, String did, String type, HttpHeaders headers) throws JsonProcessingException {
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         //save wallet
         TestUtils.createWallet(bpn, did, restTemplate, baseBpn);
 

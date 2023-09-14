@@ -798,7 +798,7 @@
         },
         {
           "id": "c46e9cc6-3057-4640-a78b-e12fc3a814df",
-          "name": "bPn",
+          "name": "bpn",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
@@ -806,10 +806,10 @@
             "aggregate.attrs": "false",
             "userinfo.token.claim": "true",
             "multivalued": "false",
-            "user.attribute": "bPn",
+            "user.attribute": "bpn",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "bPn"
+            "claim.name": "bpn"
           }
         },
         {

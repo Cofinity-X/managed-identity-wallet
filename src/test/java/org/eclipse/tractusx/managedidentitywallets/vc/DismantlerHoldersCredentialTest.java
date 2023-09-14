@@ -79,7 +79,7 @@ class DismantlerHoldersCredentialTest {
 
     @Test
     void issueDismantlerCredentialTest403() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
 
         HttpHeaders headers = AuthenticationUtils.getInvalidUserHttpHeaders();
 
@@ -110,7 +110,7 @@ class DismantlerHoldersCredentialTest {
     @Test
     void issueDismantlerCredentialTest201() throws JsonProcessingException, JSONException {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         String baseBpn = miwSettings.authorityWalletBpn().value();
 
@@ -153,7 +153,7 @@ class DismantlerHoldersCredentialTest {
 
     @Test
     void issueDismantlerCredentialWithInvalidBpnAccess409() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
 
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
 
@@ -178,7 +178,7 @@ class DismantlerHoldersCredentialTest {
 
     @Test
     void issueDismantlerCredentialWithoutAllowedVehicleBrands() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         Wallet wallet = TestUtils.createWallet(bpn, did, walletRepository);
 
@@ -200,7 +200,7 @@ class DismantlerHoldersCredentialTest {
     @Test
     void issueDismantlerCredentialWithDuplicateBpn409() {
 
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
 
         //create entry

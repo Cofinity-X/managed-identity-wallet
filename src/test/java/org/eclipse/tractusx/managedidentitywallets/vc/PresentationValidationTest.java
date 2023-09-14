@@ -107,18 +107,18 @@ class PresentationValidationTest {
 
     @BeforeEach
     public void setup() {
-        bpnOperator = miwSettings.authorityWalletBpn();
+        bpnOperator = miwSettings.authorityWalletBpn().value();
 
         CreateWalletRequest createWalletRequest = new CreateWalletRequest();
         createWalletRequest.setBpn(bpnTenant_1);
         createWalletRequest.setName("My Test Tenant Wallet");
-        Wallet tenantWallet = walletService.createWallet(createWalletRequest, bpnOperator);
+        Wallet tenantWallet = walletService.createWallet(createWalletRequest, new BPN(bpnOperator));
         tenant_1 = DidParser.parse(tenantWallet.getDid());
 
         CreateWalletRequest createWalletRequest2 = new CreateWalletRequest();
         createWalletRequest2.setBpn(bpnTenant_2);
         createWalletRequest2.setName("My Test Tenant Wallet");
-        Wallet tenantWallet2 = walletService.createWallet(createWalletRequest2, bpnOperator);
+        Wallet tenantWallet2 = walletService.createWallet(createWalletRequest2, new BPN(bpnOperator));
         tenant_2 = DidParser.parse(tenantWallet2.getDid());
 
         membershipCredential_1 = issuersCredentialService.issueMembershipCredential(
@@ -139,13 +139,13 @@ class PresentationValidationTest {
     @AfterEach
     public void cleanUp() {
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_1, false, bpnOperator);
+            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_1, false, new BPN(bpnOperator));
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore
         }
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_2, false, bpnOperator);
+            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_2, false, new BPN(bpnOperator));
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore
@@ -248,7 +248,7 @@ class PresentationValidationTest {
 
     @SneakyThrows
     private VerifiablePresentationValidationResponse validateJwtOfCredential(Map<String, Object> presentationJwt) {
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
         headers.set("Content-Type", "application/json");
         HttpEntity<Map> entity = new HttpEntity<>(presentationJwt, headers);
 

@@ -65,7 +65,7 @@ public class PresentationController extends BaseController {
             @RequestParam(name = "asJwt", required = false, defaultValue = "false") boolean asJwt,
             Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(presentationService.createPresentation(data, asJwt, audience, getBPNFromToken(principal)));
+                .body(presentationService.createPresentation(data, asJwt, audience, getBPNFromToken(principal).value()));
     }
 
     /**

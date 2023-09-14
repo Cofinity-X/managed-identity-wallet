@@ -78,7 +78,7 @@ class FrameworkHoldersCredentialTest {
 
     @Test
     void issueFrameworkCredentialTest403() {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         HttpHeaders headers = AuthenticationUtils.getInvalidUserHttpHeaders();
 
@@ -92,7 +92,7 @@ class FrameworkHoldersCredentialTest {
 
     @Test
     void issueFrameworkCredentialWithInvalidBpnAccessTest403() throws JsonProcessingException, JSONException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         TestUtils.createWallet(bpn, did, walletRepository);
 
@@ -110,13 +110,13 @@ class FrameworkHoldersCredentialTest {
 
     @Test
     void issueFrameWorkVCToBaseWalletTest201() throws JSONException, JsonProcessingException {
-        String bpn = miwSettings.authorityWalletBpn();
+        String bpn = miwSettings.authorityWalletBpn().value();
         String type = "PcfCredential";
         //create wallet
-        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
+        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn().value());
         String oldSummaryCredentialId = TestUtils.getSummaryCredentialId(wallet.getDid(), holdersCredentialRepository);
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
 
         IssueFrameworkCredentialRequest twinRequest = TestUtils.getIssueFrameworkCredentialRequest(bpn, type);
 
@@ -167,14 +167,14 @@ class FrameworkHoldersCredentialTest {
     @Test
     @DisplayName("Issue framework with invalid type")
     void issueFrameworkCredentialTest400() throws JsonProcessingException, JSONException {
-        String bpn = UUID.randomUUID().toString();
+        String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         Wallet wallet = TestUtils.createWallet(bpn, did, walletRepository);
 
 
         String type = "cx-traceability1";
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
 
         IssueFrameworkCredentialRequest twinRequest = TestUtils.getIssueFrameworkCredentialRequest(bpn, type);
 
@@ -187,11 +187,11 @@ class FrameworkHoldersCredentialTest {
 
     private void createAndValidateVC(String bpn, String did, String type) throws JsonProcessingException {
         //create wallet
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
         Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
         String oldSummaryCredentialId = TestUtils.getSummaryCredentialId(wallet.getDid(), holdersCredentialRepository);
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn());
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
 
         IssueFrameworkCredentialRequest twinRequest = TestUtils.getIssueFrameworkCredentialRequest(bpn, type);
 

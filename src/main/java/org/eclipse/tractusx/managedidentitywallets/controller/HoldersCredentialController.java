@@ -125,7 +125,7 @@ public class HoldersCredentialController extends BaseController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(holdersCredentialService.issueCredential(
                         verifiableCredential,
-                        getBPNFromToken(principal)));
+                        getBPNFromToken(principal).value()));
     }
 
 }

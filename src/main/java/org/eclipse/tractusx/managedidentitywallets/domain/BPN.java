@@ -47,4 +47,19 @@ public class BPN {
     public String value() {
         return value;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final BPN bpn = (BPN) o;
+
+        return value.equals(bpn.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
 }
