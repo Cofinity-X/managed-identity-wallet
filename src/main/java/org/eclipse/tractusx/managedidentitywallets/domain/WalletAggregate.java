@@ -46,8 +46,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * @author Pascal Manaras
- *         <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * WalletAggregate that configure a wallet
  */
 public class WalletAggregate {
 

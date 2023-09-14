@@ -25,8 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Pascal Manaras
- *         <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * BPN (Business Partner Number) is a unique identifier for a business partner.
  */
 public class BPN {
 

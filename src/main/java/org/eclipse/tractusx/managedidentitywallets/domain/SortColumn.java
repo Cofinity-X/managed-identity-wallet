@@ -21,9 +21,6 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
-/**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
- */
 public enum SortColumn {
 
     CREATED_AT("createdAt"),

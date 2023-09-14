@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * CredentialSearch is a search for credentials.
  */
 public class CredentialSearch {
 
@@ -104,7 +104,6 @@ public class CredentialSearch {
 
         private BPN callerBpn;
 
-
         public CredentialSearch build() throws IllegalStateException {
             validate();
 
@@ -135,7 +134,6 @@ public class CredentialSearch {
             this.sort.setColumn(sortColumn.value);
             return this;
         }
-
 
         public Builder withPageNumber(int pageNumber) {
             if (pageNumber < 0)

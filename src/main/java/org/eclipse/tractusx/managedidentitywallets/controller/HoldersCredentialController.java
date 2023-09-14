@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs.GetCredentialsApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs.IssueCredentialApiDoc;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
@@ -70,7 +72,7 @@ public class HoldersCredentialController extends BaseController {
      * @return the credentials
      */
     @GetMapping(path = RestURI.CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @HoldersCredentialControllerApiDocs.GetCredentialsApiDocs
+    @GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal) {
@@ -106,7 +108,7 @@ public class HoldersCredentialController extends BaseController {
      * @return the response entity`
      */
     @PostMapping(path = RestURI.CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @HoldersCredentialControllerApiDocs.IssueCredentialApiDoc
+    @IssueCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueCredential(
             @RequestBody Map<String, Object> data,
             Principal principal) {
