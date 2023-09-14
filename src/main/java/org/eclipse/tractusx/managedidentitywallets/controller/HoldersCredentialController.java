@@ -29,8 +29,8 @@ import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialCont
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
@@ -46,7 +46,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,7 +64,8 @@ public class HoldersCredentialController extends BaseController {
     /**
      * Gets credentials.
      *
-     * @param credentialSearch object holding all query parameters including default values
+     * @param credentialSearch object holding all query parameters including default
+     *                         values
      * @param principal        the principal
      * @return the credentials
      */
@@ -73,29 +73,29 @@ public class HoldersCredentialController extends BaseController {
     @HoldersCredentialControllerApiDocs.GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             HolderVerifiableCredentialSearch credentialSearch,
-            final Principal principal
-    ) {
+            final Principal principal) {
 
         CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getIssuerIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new IssuerIdentifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
                     searchBuilder.withTypesToSearch(l);
                 });
 
-        searchBuilder.withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()), SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
-                     .withPageNumber(credentialSearch.getPageNumber())
-                     .withPageSize(credentialSearch.getSize())
-                     .withCallerBpn(new BPN(getBPNFromToken(principal)));
+        searchBuilder
+                .withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                        SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
+                .withPageNumber(credentialSearch.getPageNumber())
+                .withPageSize(credentialSearch.getSize())
+                .withCallerBpn(new BPN(getBPNFromToken(principal)));
 
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(holdersCredentialService.getCredentials(
-                                     searchBuilder.build()
-                             ));
+                .body(holdersCredentialService.getCredentials(
+                        searchBuilder.build()));
     }
 
     /**
@@ -103,14 +103,13 @@ public class HoldersCredentialController extends BaseController {
      *
      * @param data      the data
      * @param principal the principal
-     * @return the response entity
+     * @return the response entity`
      */
     @PostMapping(path = RestURI.CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @HoldersCredentialControllerApiDocs.IssueCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueCredential(
             @RequestBody Map<String, Object> data,
-            Principal principal
-    ) {
+            Principal principal) {
         VerifiableCredential verifiableCredential = null;
         try {
             // validates the input (hopefully), then pass to domain
@@ -123,11 +122,9 @@ public class HoldersCredentialController extends BaseController {
         // TODO verfiy values of verifiableCredential
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(holdersCredentialService.issueCredential(
-                                     verifiableCredential,
-                                     getBPNFromToken(principal)
-                             ));
+                .body(holdersCredentialService.issueCredential(
+                        verifiableCredential,
+                        getBPNFromToken(principal)));
     }
-
 
 }

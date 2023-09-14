@@ -3,7 +3,7 @@ spring:
     allow-circular-references: true
 miw:
   host: localhost
-  encryptionKey: classpath:aes-key.bin
+  encryptionKey: ohb7echohNe3zoo1so0eiC2phue4liux
   authorityWalletDid: did:web:localhost:BPNL000000000000
   authorityWalletName: Catena-x
   authorityWalletBpn: BPNL000000000000

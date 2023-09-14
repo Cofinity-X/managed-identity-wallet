@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -505,4 +506,36 @@ public class WalletControllerApiDocs {
     @Operation(summary = "List of wallets", description = "Permission: **view_wallets** \n\n Retrieve list of registered wallets")
     public @interface RetrieveWalletsApiDoc {
     }
+
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameter(name = "pageNumber", description = "Page number, Page number start with zero")
+    public @interface PageNumberParameterDoc {
+    }
+
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameter(name = "size", description = "Number of records per page")
+    public @interface SizeParameterDoc {
+    }
+
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameter(name = "sortColumn", description = "Sort column name", examples = {
+            @ExampleObject(value = "createdAt", name = "Creation date"),
+            @ExampleObject(value = "name", name = "Wallet name"),
+            @ExampleObject(value = "did", name = "Wallet did"),
+            @ExampleObject(value = "bpn", name = "Wallet BPN")
+    })
+    public @interface SortColumnParameterDoc {
+    }
+
+    @Target(ElementType.PARAMETER)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameter(name = "sortTpe", description = "Sort order", examples = {
+            @ExampleObject(value = "desc", name = "Descending order"),
+            @ExampleObject(value = "asc", name = "Ascending order") })
+    public @interface SortTypeParameterDoc {
+    }
+
 }

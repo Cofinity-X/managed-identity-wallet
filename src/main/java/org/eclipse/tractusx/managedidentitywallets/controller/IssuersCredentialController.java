@@ -26,21 +26,19 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
-import org.eclipse.tractusx.managedidentitywallets.domain.ActivityType;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
-import org.eclipse.tractusx.managedidentitywallets.domain.HolderIdentifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssuerVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
+
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -66,11 +64,11 @@ public class IssuersCredentialController extends BaseController {
 
     private final IssuersCredentialService issuersCredentialService;
 
-
     /**
      * Gets credentials.
      *
-     * @param credentialSearch object holding all query parameters including default values
+     * @param credentialSearch object holding all query parameters including default
+     *                         values
      * @param principal        the principal
      * @return the credentials
      */
@@ -78,14 +76,13 @@ public class IssuersCredentialController extends BaseController {
     @IssuersCredentialControllerApiDocs.GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             IssuerVerifiableCredentialSearch credentialSearch,
-            Principal principal
-    ) {
+            Principal principal) {
 
         CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getHolderIdentifier())
-                .ifPresent(hi -> searchBuilder.withIdentifier(new HolderIdentifier(hi)));
+                .ifPresent(hi -> searchBuilder.withIdentifier(new Identifier(hi)));
         Optional.ofNullable(credentialSearch.getType())
                 .ifPresent(t -> {
                     List<TypeToSearch> l = t.stream().map(TypeToSearch::valueOfType).toList();
@@ -93,23 +90,22 @@ public class IssuersCredentialController extends BaseController {
                 });
 
         searchBuilder.withSort(
-                             SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
-                             SortType.valueOf(credentialSearch.getSortType().toUpperCase())
-                     )
-                     .withPageNumber(credentialSearch.getPageNumber())
-                     .withPageSize(credentialSearch.getSize())
-                     .withCallerBpn(new BPN(getBPNFromToken(principal)));
+                SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
+                .withPageNumber(credentialSearch.getPageNumber())
+                .withPageSize(credentialSearch.getSize())
+                .withCallerBpn(new BPN(getBPNFromToken(principal)));
 
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(issuersCredentialService.getCredentials(
-                                     searchBuilder.build()
-                             ));
+                .body(issuersCredentialService.getCredentials(
+                        searchBuilder.build()));
     }
 
     /**
      * Issue membership credential response entity.
      *
-     * @param issueMembershipCredentialRequest the issue membership credential request
+     * @param issueMembershipCredentialRequest the issue membership credential
+     *                                         request
      * @param principal                        the principal
      * @return the response entity
      */
@@ -117,16 +113,11 @@ public class IssuersCredentialController extends BaseController {
     @IssuersCredentialControllerApiDocs.IssueMembershipCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueMembershipCredential(
             @Valid @RequestBody IssueMembershipCredentialRequest issueMembershipCredentialRequest,
-            Principal principal
-    ) {
-
-        IssueMembershipCredentialCommand cmd = new IssueMembershipCredentialCommand(
-                new BPN(issueMembershipCredentialRequest.getBpn()),
-                new BPN(getBPNFromToken(principal))
-        );
-
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueMembershipCredential(cmd));
+                .body(issuersCredentialService.issueMembershipCredential(
+                        issueMembershipCredentialRequest,
+                        getBPNFromToken(principal)));
     }
 
     /**
@@ -140,20 +131,11 @@ public class IssuersCredentialController extends BaseController {
     @IssuersCredentialControllerApiDocs.IssueDismantlerCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueDismantlerCredential(
             @Valid @RequestBody IssueDismantlerCredentialRequest request,
-            Principal principal
-    ) {
-
-        IssueDismantlerCredentialCommand cmd = IssueDismantlerCredentialCommand
-                .builder()
-                .withActivityType(ActivityType.valueOfColumn(
-                        request.getActivityType()))
-                .withAllowedVehicleBrands(request.getAllowedVehicleBrands())
-                .withBpn(new BPN(request.getBpn()))
-                .withCaller(new BPN(getBPNFromToken(principal)))
-                .build();
-
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueDismantlerCredential(cmd));
+                .body(issuersCredentialService.issueDismantlerCredential(
+                        request,
+                        getBPNFromToken(principal)));
     }
 
     /**
@@ -167,13 +149,11 @@ public class IssuersCredentialController extends BaseController {
     @IssuersCredentialControllerApiDocs.IssueFrameworkCredentialApiDocs
     public ResponseEntity<VerifiableCredential> issueFrameworkCredential(
             @Valid @RequestBody IssueFrameworkCredentialRequest request,
-            Principal principal
-    ) {
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueFrameworkCredential(
-                                     request,
-                                     getBPNFromToken(principal)
-                             ));
+                .body(issuersCredentialService.issueFrameworkCredential(
+                        request,
+                        getBPNFromToken(principal)));
     }
 
     /**
@@ -187,10 +167,9 @@ public class IssuersCredentialController extends BaseController {
     @IssuersCredentialControllerApiDocs.ValidateVerifiableCredentialApiDocs
     public ResponseEntity<Map<String, Object>> credentialsValidation(
             @RequestBody Map<String, Object> data,
-            boolean withCredentialExpiryDate
-    ) {
+            boolean withCredentialExpiryDate) {
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(issuersCredentialService.credentialsValidation(data, withCredentialExpiryDate));
+                .body(issuersCredentialService.credentialsValidation(data, withCredentialExpiryDate));
     }
 
     /**
@@ -206,13 +185,11 @@ public class IssuersCredentialController extends BaseController {
     public ResponseEntity<VerifiableCredential> issueCredentialUsingBaseWallet(
             @RequestParam(name = "holderDid") String holderDid,
             @RequestBody Map<String, Object> data,
-            Principal principal
-    ) {
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueCredentialUsingBaseWallet(
-                                     holderDid,
-                                     data,
-                                     getBPNFromToken(principal)
-                             ));
+                .body(issuersCredentialService.issueCredentialUsingBaseWallet(
+                        holderDid,
+                        data,
+                        getBPNFromToken(principal)));
     }
 }

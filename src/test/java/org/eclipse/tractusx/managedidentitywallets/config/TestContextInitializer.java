@@ -28,14 +28,13 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.net.ServerSocket;
-import java.util.Base64;
 
 public class TestContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     private static final int port = findFreePort();
-    private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer().withRealmImportFile("miw-test-realm.json");
+    private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
+            .withRealmImportFile("miw-test-realm.json");
 
     @SneakyThrows
     @Override
@@ -45,12 +44,11 @@ public class TestContextInitializer implements ApplicationContextInitializer<Con
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         // use explicit initialization as the platform default might fail
         keyGen.init(128);
-        SecretKey secretKey = keyGen.generateKey();
         TestPropertyValues.of(
                 "server.port=" + port,
                 "miw.host: localhost:${server.port}",
                 "miw.enforceHttps=false",
-                "miw.encryptionKey=classpath:aes-key.bin",
+                "miw.encryptionKey=ohb7echohNe3zoo1so0eiC2phue4liux",
                 "miw.authorityWalletBpn: BPNL000000000000",
                 "miw.authorityWalletName: Test-X",
                 "miw.authorityWalletDid: did:web:localhost%3A${server.port}:BPNL000000000000",
@@ -65,8 +63,8 @@ public class TestContextInitializer implements ApplicationContextInitializer<Con
                 "miw.security.token-url=${miw.security.auth-server-url}realms/${miw.security.realm}/protocol/openid-connect/token",
                 "miw.security.refresh-token-url=${miw.security.token-url}",
                 "spring.security.oauth2.resourceserver.jwt.issuer-uri=${miw.security.auth-server-url}realms/${miw.security.realm}",
-                "spring.security.oauth2.resourceserver.jwk-set-uri=${miw.security.auth-server-url}realms/${miw.security.realm}/protocol/openid-connect/certs"
-        ).applyTo(applicationContext.getEnvironment());
+                "spring.security.oauth2.resourceserver.jwk-set-uri=${miw.security.auth-server-url}realms/${miw.security.realm}/protocol/openid-connect/certs")
+                .applyTo(applicationContext.getEnvironment());
     }
 
     public static String getAuthServerUrl() {
