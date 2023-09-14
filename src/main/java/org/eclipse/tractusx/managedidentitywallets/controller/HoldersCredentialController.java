@@ -29,8 +29,7 @@ import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialCont
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
-import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.HolderIdentifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
@@ -47,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

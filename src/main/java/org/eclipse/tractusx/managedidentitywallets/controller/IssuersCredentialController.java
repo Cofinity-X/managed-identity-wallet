@@ -26,20 +26,21 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
+import org.eclipse.tractusx.managedidentitywallets.domain.ActivityType;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
-import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.HolderIdentifier;
-import org.eclipse.tractusx.managedidentitywallets.domain.IssuerIdentifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueMembershipCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssuerVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
-
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -118,11 +119,14 @@ public class IssuersCredentialController extends BaseController {
             @Valid @RequestBody IssueMembershipCredentialRequest issueMembershipCredentialRequest,
             Principal principal
     ) {
+
+        IssueMembershipCredentialCommand cmd = new IssueMembershipCredentialCommand(
+                new BPN(issueMembershipCredentialRequest.getBpn()),
+                new BPN(getBPNFromToken(principal))
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueMembershipCredential(
-                                     issueMembershipCredentialRequest,
-                                     getBPNFromToken(principal)
-                             ));
+                             .body(issuersCredentialService.issueMembershipCredential(cmd));
     }
 
     /**
@@ -138,11 +142,18 @@ public class IssuersCredentialController extends BaseController {
             @Valid @RequestBody IssueDismantlerCredentialRequest request,
             Principal principal
     ) {
+
+        IssueDismantlerCredentialCommand cmd = IssueDismantlerCredentialCommand
+                .builder()
+                .withActivityType(ActivityType.valueOfColumn(
+                        request.getActivityType()))
+                .withAllowedVehicleBrands(request.getAllowedVehicleBrands())
+                .withBpn(new BPN(request.getBpn()))
+                .withCaller(new BPN(getBPNFromToken(principal)))
+                .build();
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueDismantlerCredential(
-                                     request,
-                                     getBPNFromToken(principal)
-                             ));
+                             .body(issuersCredentialService.issueDismantlerCredential(cmd));
     }
 
     /**

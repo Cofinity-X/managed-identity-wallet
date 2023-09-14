@@ -19,10 +19,15 @@
  * ******************************************************************************
  */
 
-package org.eclipse.tractusx.managedidentitywallets.domain;
+package org.eclipse.tractusx.managedidentitywallets.domain.command;
 
 import com.smartsensesolutions.java.commons.sort.Sort;
 import com.smartsensesolutions.java.commons.sort.SortType;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
+import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 
 import java.util.List;
 import java.util.Objects;

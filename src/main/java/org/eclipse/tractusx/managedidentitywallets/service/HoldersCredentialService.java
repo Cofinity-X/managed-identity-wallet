@@ -34,7 +34,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
-import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.exception.CredentialNotFoundProblem;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
@@ -88,7 +88,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
      *
      * @param credentialSearch pojo holding all search parameters
      * @return the credentials
-     * @see org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch
+     * @see CredentialSearch
      */
 
     public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {

@@ -58,6 +58,8 @@ public class CommonUtils {
      * @param identifier the identifier
      * @return the identifier type
      */
+
+    // TODO REGEX, because did:web:sdfjkghdfjk%&/%&/§$%:dfjkghdfjkhgd would also be valid
     public static String getIdentifierType(String identifier) {
         if (identifier.startsWith("did:web")) {
             return StringPool.DID;

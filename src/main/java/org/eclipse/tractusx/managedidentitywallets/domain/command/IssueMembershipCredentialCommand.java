@@ -19,44 +19,16 @@
  * ******************************************************************************
  */
 
-package org.eclipse.tractusx.managedidentitywallets.dao.repository;
+package org.eclipse.tractusx.managedidentitywallets.domain.command;
 
-import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
-import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 
 /**
- * The interface Wallet repository.
+ * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-@Repository
-public interface WalletRepository extends BaseRepository<Wallet, Long> {
+public class IssueMembershipCredentialCommand extends IssueCredentialCommand {
 
-    /**
-     * Gets by bpn.
-     *
-     * @param bpn the bpn
-     * @return the by bpn
-     */
-    Wallet getByBpn(String bpn);
-
-    /**
-     * Exists by bpn boolean.
-     *
-     * @param bpn the bpn
-     * @return the boolean
-     */
-    boolean existsByBpn(String bpn);
-
-    /**
-     * Gets by did.
-     *
-     * @param did the did
-     * @return the by did
-     */
-    Wallet getByDid(String did);
-
-    int countByBpn(String bpn);
-
+    public IssueMembershipCredentialCommand(final BPN bpn, final BPN caller) {
+        super(bpn, caller);
+    }
 }

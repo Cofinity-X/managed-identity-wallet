@@ -19,44 +19,26 @@
  * ******************************************************************************
  */
 
-package org.eclipse.tractusx.managedidentitywallets.dao.repository;
-
-import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
-import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+package org.eclipse.tractusx.managedidentitywallets.domain;
 
 /**
- * The interface Wallet repository.
+ * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-@Repository
-public interface WalletRepository extends BaseRepository<Wallet, Long> {
+public enum ActivityType {
+    VEHICLE_DISMANTLE("vehicleDismantle");
 
-    /**
-     * Gets by bpn.
-     *
-     * @param bpn the bpn
-     * @return the by bpn
-     */
-    Wallet getByBpn(String bpn);
+    public final String value;
 
-    /**
-     * Exists by bpn boolean.
-     *
-     * @param bpn the bpn
-     * @return the boolean
-     */
-    boolean existsByBpn(String bpn);
+    ActivityType(final String value) {
+        this.value = value;
+    }
 
-    /**
-     * Gets by did.
-     *
-     * @param did the did
-     * @return the by did
-     */
-    Wallet getByDid(String did);
-
-    int countByBpn(String bpn);
-
+    public static ActivityType valueOfColumn(String label) {
+        for (ActivityType e : values()) {
+            if (e.value.equals(label)) {
+                return e;
+            }
+        }
+        throw new IllegalArgumentException("%s is not a known column".formatted(label));
+    }
 }
