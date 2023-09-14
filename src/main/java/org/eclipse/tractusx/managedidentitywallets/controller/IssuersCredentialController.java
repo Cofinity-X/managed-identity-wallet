@@ -99,7 +99,7 @@ public class IssuersCredentialController extends BaseController {
                 SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
                 .withPageNumber(credentialSearch.getPageNumber())
                 .withPageSize(credentialSearch.getSize())
-                .withCallerBpn(new BPN(getBPNFromToken(principal)));
+                .withCallerBpn(getBPNFromToken(principal));
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(issuersCredentialService.getCredentials(
