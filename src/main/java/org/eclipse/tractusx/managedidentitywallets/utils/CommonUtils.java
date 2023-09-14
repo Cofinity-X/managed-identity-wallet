@@ -53,21 +53,6 @@ public class CommonUtils {
     }
 
     /**
-     * Gets identifier type.
-     *
-     * @param identifier the identifier
-     * @return the identifier type
-     */
-    public static String getIdentifierType(String identifier) {
-        if (identifier.startsWith("did:web")) {
-            return StringPool.DID;
-        } else {
-            return StringPool.BPN;
-        }
-    }
-
-
-    /**
      * Gets credential.
      *
      * @param subject         the subject
@@ -77,8 +62,9 @@ public class CommonUtils {
      * @param holderDid       the holder did
      * @return the credential
      */
-    public static HoldersCredential getHoldersCredential(VerifiableCredentialSubject subject, List<String> types, DidDocument issuerDoc,
-                                                         byte[] privateKeyBytes, String holderDid, List<URI> contexts, Date expiryDate, boolean selfIssued) {
+    public static HoldersCredential getHoldersCredential(VerifiableCredentialSubject subject, List<String> types,
+            DidDocument issuerDoc,
+            byte[] privateKeyBytes, String holderDid, List<URI> contexts, Date expiryDate, boolean selfIssued) {
         List<String> cloneTypes = new ArrayList<>(types);
 
         // Create VC
@@ -98,11 +84,12 @@ public class CommonUtils {
                 .build();
     }
 
-    @SneakyThrows({UnsupportedSignatureTypeException.class, InvalidePrivateKeyFormat.class})
-    private static VerifiableCredential createVerifiableCredential(DidDocument issuerDoc, List<String> verifiableCredentialType,
-                                                                   VerifiableCredentialSubject verifiableCredentialSubject,
-                                                                   byte[] privateKey, List<URI> contexts, Date expiryDate) {
-        //VC Builder
+    @SneakyThrows({ UnsupportedSignatureTypeException.class, InvalidePrivateKeyFormat.class })
+    private static VerifiableCredential createVerifiableCredential(DidDocument issuerDoc,
+            List<String> verifiableCredentialType,
+            VerifiableCredentialSubject verifiableCredentialSubject,
+            byte[] privateKey, List<URI> contexts, Date expiryDate) {
+        // VC Builder
 
         // if the credential does not contain the JWS proof-context add it
         URI jwsUri = URI.create("https://w3id.org/security/suites/jws-2020/v1");
@@ -110,28 +97,25 @@ public class CommonUtils {
             contexts.add(jwsUri);
 
         URI id = URI.create(UUID.randomUUID().toString());
-        VerifiableCredentialBuilder builder =
-                new VerifiableCredentialBuilder()
-                        .context(contexts)
-                        .id(URI.create(issuerDoc.getId() + "#" + id))
-                        .type(verifiableCredentialType)
-                        .issuer(issuerDoc.getId())
-                        .expirationDate(expiryDate.toInstant())
-                        .issuanceDate(Instant.now())
-                        .credentialSubject(verifiableCredentialSubject);
-
+        VerifiableCredentialBuilder builder = new VerifiableCredentialBuilder()
+                .context(contexts)
+                .id(URI.create(issuerDoc.getId() + "#" + id))
+                .type(verifiableCredentialType)
+                .issuer(issuerDoc.getId())
+                .expirationDate(expiryDate.toInstant())
+                .issuanceDate(Instant.now())
+                .credentialSubject(verifiableCredentialSubject);
 
         LinkedDataProofGenerator generator = LinkedDataProofGenerator.newInstance(SignatureType.JWS);
         URI verificationMethod = issuerDoc.getVerificationMethods().get(0).getId();
 
-        JWSSignature2020 proof =
-                (JWSSignature2020) generator.createProof(builder.build(), verificationMethod, new x21559PrivateKey(privateKey));
+        JWSSignature2020 proof = (JWSSignature2020) generator.createProof(builder.build(), verificationMethod,
+                new x21559PrivateKey(privateKey));
 
-
-        //Adding Proof to VC
+        // Adding Proof to VC
         builder.proof(proof);
 
-        //Create Credential
+        // Create Credential
         return builder.build();
     }
 }

@@ -23,14 +23,13 @@ package org.eclipse.tractusx.managedidentitywallets.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.exception.WalletNotFoundProblem;
-import org.eclipse.tractusx.managedidentitywallets.utils.CommonUtils;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
-import org.eclipse.tractusx.ssi.lib.exception.DidParseException;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.stereotype.Service;
 
@@ -45,29 +44,32 @@ public class CommonService {
     private final WalletRepository walletRepository;
 
     /**
-     * Gets wallet by identifier(BPN or did).
-     *
-     * @param identifier the identifier
-     * @return the wallet by identifier
+     * Gets wallet by bpn.
+     * 
+     * @param bpn
+     * @return
      */
-    public Wallet getWalletByIdentifier(String identifier) {
-        Wallet wallet;
-        if (CommonUtils.getIdentifierType(identifier).equals(StringPool.BPN)) {
-            wallet = walletRepository.getByBpn(identifier);
-        } else {
-            try {
-                wallet = walletRepository.getByDid(identifier);
-            } catch (DidParseException e) {
-                log.error("Error while parsing did {}", StringEscapeUtils.escapeJava(identifier), e);
-                throw new WalletNotFoundProblem("Error while parsing did " + identifier);
-            }
-        }
-        Validate.isNull(wallet).launch(new WalletNotFoundProblem("Wallet not found for identifier " + identifier));
+    public Wallet getWalletByBPN(BPN bpn) {
+        Wallet wallet = walletRepository.getByBpn(bpn.value());
+        Validate.isNull(wallet).launch(new WalletNotFoundProblem("Wallet not found for identifier " + bpn.value()));
         return wallet;
     }
 
-    public static boolean validateExpiry(boolean withCredentialExpiryDate, VerifiableCredential verifiableCredential, Map<String, Object> response) {
-        //validate expiry date
+    /**
+     * get wallet by did
+     * 
+     * @param did
+     * @return
+     */
+    public Wallet getWalletByDid(Identifier did) {
+        Wallet wallet = walletRepository.getByDid(did.value());
+        Validate.isNull(wallet).launch(new WalletNotFoundProblem("Wallet not found for identifier " + did));
+        return wallet;
+    }
+
+    public static boolean validateExpiry(boolean withCredentialExpiryDate, VerifiableCredential verifiableCredential,
+            Map<String, Object> response) {
+        // validate expiry date
         boolean dateValidation = true;
         if (withCredentialExpiryDate) {
             Instant expirationDate = verifiableCredential.getExpirationDate();

@@ -23,6 +23,9 @@ package org.eclipse.tractusx.managedidentitywallets.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.ssi.lib.model.did.DidDocument;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +36,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class DidDocumentService {
-    
+
     private final CommonService commonService;
 
     /**
@@ -42,8 +45,18 @@ public class DidDocumentService {
      * @param identifier the identifier
      * @return the did document
      */
-    public DidDocument getDidDocument(String identifier) {
-        return commonService.getWalletByIdentifier(identifier).getDidDocument();
+    public DidDocument getDidDocument(Identifier did) {
+        return commonService.getWalletByDid(did).getDidDocument();
+    }
+
+    /**
+     * Gets did document by BPN.
+     *
+     * @param BPN the bpn
+     * @return the did document
+     */
+    public DidDocument getDidDocument(BPN bpn) {
+        return commonService.getWalletByBPN(bpn).getDidDocument();
     }
 
 }

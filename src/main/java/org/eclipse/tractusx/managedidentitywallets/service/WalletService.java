@@ -105,12 +105,12 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn  the caller bpn
      * @return the map
      */
-    public Map<String, String> storeCredential(Map<String, Object> data, String identifier, String callerBpn) {
+    public Map<String, String> storeCredential(Map<String, Object> data, String identifier, BPN callerBpn) {
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
         Wallet wallet = getWalletByIdentifier(identifier);
 
         // validate BPN access
-        Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
+        Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
                 .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
 
         // check type
@@ -147,13 +147,13 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn       the caller bpn
      * @return the wallet by identifier
      */
-    public Wallet getWalletByIdentifier(String identifier, boolean withCredentials, String callerBpn) {
+    public Wallet getWalletByIdentifier(String identifier, boolean withCredentials, BPN callerBpn) {
         Wallet wallet = getWalletByIdentifier(identifier);
 
         // authority wallet can see all wallets
-        if (!miwSettings.authorityWalletBpn().equals(callerBpn)) {
+        if (!miwSettings.authorityWalletBpn().equals(callerBpn.value())) {
             // validate BPN access
-            Validate.isFalse(callerBpn.equalsIgnoreCase(wallet.getBpn()))
+            Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
                     .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
         }
 
@@ -191,7 +191,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
-    public Wallet createWallet(CreateWalletRequest request, String callerBpn) {
+    public Wallet createWallet(CreateWalletRequest request, BPN callerBpn) {
         return createWallet(request, false, callerBpn);
     }
 
@@ -203,7 +203,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      */
     @SneakyThrows
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    private Wallet createWallet(CreateWalletRequest request, boolean authority, String callerBpn) {
+    private Wallet createWallet(CreateWalletRequest request, boolean authority, BPN callerBpn) {
         validateCreateWallet(request, callerBpn);
 
         WalletAggregate walletAggregate = WalletAggregate.builder()
@@ -258,7 +258,7 @@ public class WalletService extends BaseService<Wallet, Long> {
                     .name(miwSettings.authorityWalletName())
                     .bpn(miwSettings.authorityWalletBpn())
                     .build();
-            createWallet(request, true, miwSettings.authorityWalletBpn());
+            createWallet(request, true, new BPN(miwSettings.authorityWalletBpn()));
             log.info(
                     "Authority wallet created with bpn {}",
                     StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn()));
@@ -270,9 +270,9 @@ public class WalletService extends BaseService<Wallet, Long> {
 
     }
 
-    private void validateCreateWallet(CreateWalletRequest request, String callerBpn) {
+    private void validateCreateWallet(CreateWalletRequest request, BPN callerBpn) {
         // check base wallet
-        Validate.isFalse(callerBpn.equalsIgnoreCase(miwSettings.authorityWalletBpn()))
+        Validate.isFalse(callerBpn.value().equalsIgnoreCase(miwSettings.authorityWalletBpn()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // check wallet already exists
