@@ -316,7 +316,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Issue dismantler credential verifiable credential.
      *
-     * @param cmd   command containing all required properties
+     * @param cmd command containing all required properties
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
@@ -388,13 +388,12 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Issue membership credential verifiable credential.
      *
-     * @param cmd   command containing all required properties
+     * @param cmd command containing all required properties
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public VerifiableCredential issueMembershipCredential(
-            IssueMembershipCredentialCommand cmd
-            ) {
+            IssueMembershipCredentialCommand cmd) {
 
         // Fetch Holder Wallet
         Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn());
@@ -478,8 +477,12 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             String holderDid,
             Map<String, Object> data,
             BPN callerBPN) {
-        // Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByDid(new Identifier(holderDid));
+        Wallet holderWallet;
+        if (commonService.checkIfDid(holderDid)) {
+            holderWallet = commonService.getWalletByDid(new Identifier(holderDid));
+        } else {
+            holderWallet = commonService.getWalletByBPN(new BPN(holderDid));
+        }
 
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
 
@@ -572,7 +575,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // issuer must be base wallet
-        Validate.isFalse(issuerWallet.getBpn().equals(miwSettings.authorityWalletBpn()))
+        Validate.isFalse(issuerWallet.getBpn().equals(miwSettings.authorityWalletBpn().value()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
     }
 
@@ -582,7 +585,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     }
 
     private boolean isSelfIssued(String holderBpn) {
-        return holderBpn.equals(miwSettings.authorityWalletBpn());
+        return holderBpn.equals(miwSettings.authorityWalletBpn().value());
     }
 
     /**

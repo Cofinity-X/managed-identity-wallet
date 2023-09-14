@@ -83,4 +83,9 @@ public class CommonService {
         return dateValidation;
     }
 
+    public boolean checkIfDid(String str) {
+        return str.toLowerCase().startsWith("did:");
+
+    }
+
 }

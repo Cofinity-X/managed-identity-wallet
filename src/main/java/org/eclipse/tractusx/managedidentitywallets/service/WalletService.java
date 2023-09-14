@@ -106,10 +106,14 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn  the caller bpn
      * @return the map
      */
-    public Map<String, String> storeCredential(Map<String, Object> data, String identifier, BPN callerBpn) {
+    public Map<String, String> storeCredential(Map<String, Object> data, String didOrBpn, BPN callerBpn) {
+        Wallet wallet;
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
-        Wallet wallet = commonService.getWalletByDid(new Identifier(identifier));
-
+        if (commonService.checkIfDid(didOrBpn)) {
+            wallet = commonService.getWalletByDid(new Identifier(didOrBpn));
+        } else {
+            wallet = commonService.getWalletByBPN(new BPN(didOrBpn));
+        }
         // validate BPN access
         Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
                 .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
@@ -144,11 +148,15 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn       the caller bpn
      * @return the wallet by identifier
      */
-    public Wallet getWalletByIdentifier(String identifier, boolean withCredentials, BPN callerBpn) {
-        Wallet wallet = commonService.getWalletByDid(new Identifier(identifier));
-
+    public Wallet getWalletByIdentifier(String didOrBpn, boolean withCredentials, BPN callerBpn) {
+        Wallet wallet;
+        if (commonService.checkIfDid(didOrBpn)) {
+            wallet = commonService.getWalletByDid(new Identifier(didOrBpn));
+        } else {
+            wallet = commonService.getWalletByBPN(new BPN(didOrBpn));
+        }
         // authority wallet can see all wallets
-        if (!miwSettings.authorityWalletBpn().equals(callerBpn.value())) {
+        if (!miwSettings.authorityWalletBpn().value().equals(callerBpn.value())) {
             // validate BPN access
             Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
                     .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));

@@ -45,18 +45,20 @@ public class DidDocumentService {
      * @param identifier the identifier
      * @return the did document
      */
-    public DidDocument getDidDocument(Identifier did) {
-        return commonService.getWalletByDid(did).getDidDocument();
+    public DidDocument getDidDocument(String didOrBpn) {
+        if (commonService.checkIfDid(didOrBpn)) {
+            return commonService.getWalletByDid(new Identifier(didOrBpn)).getDidDocument();
+        } else {
+            return commonService.getWalletByBPN(new BPN(didOrBpn)).getDidDocument();
+        }
     }
 
     /**
-     * Gets did document by BPN.
-     *
-     * @param BPN the bpn
-     * @return the did document
+     * Gets did document by BPN
+     * 
+     * @param bpn
      */
-    public DidDocument getDidDocument(BPN bpn) {
+    public DidDocument getDidDocumentByBPN(BPN bpn) {
         return commonService.getWalletByBPN(bpn).getDidDocument();
     }
-
 }

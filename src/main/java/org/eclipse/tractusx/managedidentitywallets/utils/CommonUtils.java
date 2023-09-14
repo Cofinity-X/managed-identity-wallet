@@ -22,7 +22,6 @@
 package org.eclipse.tractusx.managedidentitywallets.utils;
 
 import lombok.SneakyThrows;
-import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.ssi.lib.crypt.x21559.x21559PrivateKey;
 import org.eclipse.tractusx.ssi.lib.exception.InvalidePrivateKeyFormat;

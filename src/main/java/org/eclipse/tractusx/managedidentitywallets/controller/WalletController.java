@@ -81,11 +81,11 @@ public class WalletController extends BaseController {
     @PostMapping(path = RestURI.API_WALLETS_IDENTIFIER_CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @StoreVerifiableCredentialApiDoc
     public ResponseEntity<Map<String, String>> storeCredential(@RequestBody Map<String, Object> data,
-            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier,
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String didOrBpn,
             Principal principal) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.storeCredential(data, identifier, getBPNFromToken(principal)));
+                .body(service.storeCredential(data, didOrBpn, getBPNFromToken(principal)));
     }
 
     /**
@@ -98,11 +98,11 @@ public class WalletController extends BaseController {
     @GetMapping(path = RestURI.API_WALLETS_IDENTIFIER, produces = MediaType.APPLICATION_JSON_VALUE)
     @RetrieveWalletApiDoc
     public ResponseEntity<Wallet> getWalletByIdentifier(
-            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier,
+            @DidOrBpnParameterDoc @PathVariable(name = "identifier") String didOrBpn,
             @RequestParam(name = "withCredentials", defaultValue = "false") boolean withCredentials,
             Principal principal) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(service.getWalletByIdentifier(identifier, withCredentials, getBPNFromToken(principal)));
+                .body(service.getWalletByIdentifier(didOrBpn, withCredentials, getBPNFromToken(principal)));
     }
 
     /**
