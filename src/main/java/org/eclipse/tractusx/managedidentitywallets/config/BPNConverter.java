@@ -19,44 +19,22 @@
  * ******************************************************************************
  */
 
-package org.eclipse.tractusx.managedidentitywallets.service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+package org.eclipse.tractusx.managedidentitywallets.config;
 
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
-import org.eclipse.tractusx.ssi.lib.model.did.DidDocument;
-import org.springframework.stereotype.Service;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
 /**
- * The type Did document service.
+ * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
  */
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class DidDocumentService {
+@Component
+@ConfigurationPropertiesBinding
+public class BPNConverter implements Converter<String, BPN> {
 
-    private final CommonService commonService;
-
-    /**
-     * Gets did document by identifier(BPN or Did).
-     *
-     * @param identifier the identifier
-     * @return the did document
-     */
-    public DidDocument getDidDocument(Identifier did) {
-        return commonService.getWalletByDid(did).getDidDocument();
+    @Override
+    public BPN convert(final String source) {
+        return new BPN(source);
     }
-
-    /**
-     * Gets did document by BPN.
-     *
-     * @param BPN the bpn
-     * @return the did document
-     */
-    public DidDocument getDidDocument(BPN bpn) {
-        return commonService.getWalletByBPN(bpn).getDidDocument();
-    }
-
 }

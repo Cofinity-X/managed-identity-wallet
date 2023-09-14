@@ -29,6 +29,8 @@ import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentController
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidDocumentApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidResolveApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.service.DidDocumentService;
 import org.eclipse.tractusx.ssi.lib.model.did.DidDocument;
 import org.springframework.http.HttpStatus;
@@ -58,7 +60,7 @@ public class DidDocumentController {
     @GetDidDocumentApiDocs
     public ResponseEntity<DidDocument> getDidDocument(
             @DidOrBpnParameterDoc @PathVariable(name = "identifier") String identifier) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(identifier));
+        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new Identifier(identifier)));
     }
 
     /**
@@ -71,6 +73,7 @@ public class DidDocumentController {
     @GetMapping(path = RestURI.DID_RESOLVE, produces = MediaType.APPLICATION_JSON_VALUE)
     @GetDidResolveApiDocs
     public ResponseEntity<DidDocument> getDidResolve(@BpnParameterDoc @PathVariable(name = "bpn") String bpn) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(bpn));
+        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new BPN(bpn)));
     }
+
 }

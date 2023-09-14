@@ -94,9 +94,9 @@ class DismantlerHoldersCredentialTest {
 
     @Test
     void issueDismantlerCredentialToBaseWalletTest201() throws JSONException {
-        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn());
+        Wallet wallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn().value());
         String oldSummaryCredentialId = TestUtils.getSummaryCredentialId(wallet.getDid(), holdersCredentialRepository);
-        ResponseEntity<String> response = issueDismantlerCredential(miwSettings.authorityWalletBpn(), miwSettings.authorityWalletBpn());
+        ResponseEntity<String> response = issueDismantlerCredential(miwSettings.authorityWalletBpn().value(), miwSettings.authorityWalletBpn().value());
         Assertions.assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
         List<HoldersCredential> credentials = holdersCredentialRepository.getByHolderDidAndType(miwSettings.authorityWalletDid(), MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL);
         Assertions.assertFalse(credentials.isEmpty());
@@ -112,7 +112,7 @@ class DismantlerHoldersCredentialTest {
 
         String bpn = UUID.randomUUID().toString();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
-        String baseBpn = miwSettings.authorityWalletBpn();
+        String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //create wallet
         Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
@@ -182,7 +182,7 @@ class DismantlerHoldersCredentialTest {
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         Wallet wallet = TestUtils.createWallet(bpn, did, walletRepository);
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn()); //token must contain base wallet BPN
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value()); //token must contain base wallet BPN
 
         IssueDismantlerCredentialRequest request = IssueDismantlerCredentialRequest.builder()
                 .activityType(StringPool.VEHICLE_DISMANTLE)
@@ -217,7 +217,7 @@ class DismantlerHoldersCredentialTest {
     private ResponseEntity<String> issueDismantlerCredential(String bpn, String did) {
 
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn()); //token must contain base wallet BPN
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value()); //token must contain base wallet BPN
 
         IssueDismantlerCredentialRequest request = IssueDismantlerCredentialRequest.builder()
                 .activityType(StringPool.VEHICLE_DISMANTLE)

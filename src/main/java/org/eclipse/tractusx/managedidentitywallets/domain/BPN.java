@@ -25,11 +25,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * BPN (Business Partner Number) is a unique identifier for a business partner.
  */
 public class BPN {
 
-    private static final String PATTERN = "^BPNL[0-9a-f]{12}$";
+    private static final String PATTERN = "^BPN[ALS][0-9a-f]{12}$";
 
     private final String value;
 
@@ -40,7 +40,6 @@ public class BPN {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("BPN %s is not valid".formatted(bpn));
         }
-
 
         this.value = bpn;
     }

@@ -40,8 +40,11 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.IssuersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.IssuersCredentialRepository;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
@@ -74,7 +77,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -118,8 +120,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             SpecificationUtil<IssuersCredential> credentialSpecificationUtil,
             WalletKeyService walletKeyService,
             HoldersCredentialRepository holdersCredentialRepository,
-            CommonService commonService
-    ) {
+            CommonService commonService) {
         this.issuersCredentialRepository = issuersCredentialRepository;
         this.miwSettings = miwSettings;
         this.credentialSpecificationUtil = credentialSpecificationUtil;
@@ -127,7 +128,6 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         this.holdersCredentialRepository = holdersCredentialRepository;
         this.commonService = commonService;
     }
-
 
     @Override
     protected BaseRepository<IssuersCredential, Long> getRepository() {
@@ -139,51 +139,47 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         return credentialSpecificationUtil;
     }
 
-
     /**
      * Gets credentials.
      *
-     * @param credentialSearch pojo holding all search parameters
+     * @see org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand
+     * @param credentialSearchCommand pojo holding all search parameters
      * @return the credentials
-     * @see CredentialSearch
      */
 
-    public PageImpl<VerifiableCredential> getCredentials(CredentialSearch credentialSearch) {
+    public PageImpl<VerifiableCredential> getCredentials(CredentialSearchCommand credentialSearchCommand) {
 
         FilterRequest filterRequest = new FilterRequest();
-        filterRequest.setSize(credentialSearch.pageSize());
-        filterRequest.setPage(credentialSearch.pageNumber());
+        filterRequest.setSize(credentialSearchCommand.pageSize());
+        filterRequest.setPage(credentialSearchCommand.pageNumber());
 
-        //Issuer must be caller of API
-        Wallet issuerWallet = commonService.getWalletByIdentifier(credentialSearch.callerBpn().value());
+        // Issuer must be caller of API
+        Wallet issuerWallet = commonService.getWalletByBPN(credentialSearchCommand.callerBpn());
         filterRequest.appendCriteria(StringPool.ISSUER_DID, Operator.EQUALS, issuerWallet.getDid());
 
-        Optional.ofNullable(credentialSearch.identifier()).ifPresent(o -> {
-            Wallet holderWallet = commonService.getWalletByIdentifier(o.value());
+        Optional.ofNullable(credentialSearchCommand.identifier()).ifPresent(o -> {
+            Wallet holderWallet = commonService.getWalletByDid(o);
             filterRequest.appendCriteria(StringPool.HOLDER_DID, Operator.EQUALS, holderWallet.getDid());
         });
 
-        Optional.ofNullable(credentialSearch.credentialId())
+        Optional.ofNullable(credentialSearchCommand.credentialId())
                 .ifPresent(
                         o -> filterRequest.appendCriteria(
                                 StringPool.CREDENTIAL_ID,
                                 Operator.EQUALS,
-                                o.value()
-                        )
-                );
-
+                                o.value()));
 
         FilterRequest request = new FilterRequest();
-        if (!CollectionUtils.isEmpty(credentialSearch.typeToSearch())) {
+        if (!CollectionUtils.isEmpty(credentialSearchCommand.typeToSearch())) {
             request.setPage(filterRequest.getPage());
             request.setSize(filterRequest.getSize());
             request.setCriteriaOperator(CriteriaOperator.OR);
-            for (TypeToSearch str : credentialSearch.typeToSearch()) {
+            for (TypeToSearch str : credentialSearchCommand.typeToSearch()) {
                 request.appendCriteria(StringPool.TYPE, Operator.CONTAIN, str.value);
             }
         }
 
-        filterRequest.setSort(credentialSearch.sort());
+        filterRequest.setSort(credentialSearchCommand.sort());
         Page<IssuersCredential> filter = filter(filterRequest, request, CriteriaOperator.AND);
 
         List<VerifiableCredential> list = new ArrayList<>(filter.getContent().size());
@@ -192,7 +188,6 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         }
         return new PageImpl<>(list, filter.getPageable(), filter.getTotalElements());
     }
-
 
     /**
      * Issue bpn credential
@@ -207,16 +202,14 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(baseWallet.getId());
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                MIWVerifiableCredentialType.BPN_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.BPN_CREDENTIAL);
         VerifiableCredentialSubject verifiableCredentialSubject = new VerifiableCredentialSubject(Map.of(
                 StringPool.TYPE,
                 MIWVerifiableCredentialType.BPN_CREDENTIAL,
                 StringPool.ID,
                 holderWallet.getDid(),
                 StringPool.BPN,
-                holderWallet.getBpn()
-        ));
+                holderWallet.getBpn()));
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 verifiableCredentialSubject,
                 types,
@@ -225,25 +218,23 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 holderWallet.getDid(),
                 miwSettings.vcContexts(),
                 miwSettings.vcExpiryDate(),
-                authority
-        );
+                authority);
 
-        //Store Credential in holder wallet
+        // Store Credential in holder wallet
         holdersCredential = holdersCredentialRepository.save(holdersCredential);
 
-        //Store Credential in issuers table
+        // Store Credential in issuers table
         IssuersCredential issuersCredential = IssuersCredential.of(holdersCredential);
         issuersCredentialRepository.save(issuersCredential);
 
-        //update summery VC
+        // update summery VC
         updateSummeryCredentials(
                 baseWallet.getDidDocument(),
                 privateKeyBytes,
                 baseWallet.getDid(),
                 holderWallet.getBpn(),
                 holderWallet.getDid(),
-                MIWVerifiableCredentialType.BPN_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.BPN_CREDENTIAL);
 
         log.debug("BPN credential issued for bpn -{}", StringEscapeUtils.escapeJava(holderWallet.getBpn()));
 
@@ -258,24 +249,24 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public VerifiableCredential issueFrameworkCredential(IssueFrameworkCredentialRequest request, String callerBPN) {
+    public VerifiableCredential issueFrameworkCredential(IssueFrameworkCredentialRequest request, BPN callerBPN) {
 
-        //validate type
+        // validate type
         Validate.isFalse(miwSettings.supportedFrameworkVCTypes().contains(request.getType()))
                 .launch(new BadDataException("Framework credential of type " + request.getType() +
-                                             " is not supported, supported values are " +
-                                             miwSettings.supportedFrameworkVCTypes()));
+                        " is not supported, supported values are " +
+                        miwSettings.supportedFrameworkVCTypes()));
 
-        //Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByIdentifier(request.getHolderIdentifier());
+        // Fetch Holder Wallet
+        Wallet holderWallet = commonService.getWalletByBPN(new BPN(request.getHolderIdentifier()));
 
-        Wallet baseWallet = commonService.getWalletByIdentifier(miwSettings.authorityWalletBpn());
+        Wallet baseWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
 
         validateAccess(callerBPN, baseWallet);
         // get Key
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(baseWallet.getId());
 
-        //if base wallet issue credentials to itself
+        // if base wallet issue credentials to itself
         boolean isSelfIssued = isSelfIssued(holderWallet.getBpn());
 
         VerifiableCredentialSubject subject = new VerifiableCredentialSubject(Map.of(
@@ -283,12 +274,10 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 StringPool.ID, holderWallet.getDid(),
                 StringPool.HOLDER_IDENTIFIER, holderWallet.getBpn(),
                 StringPool.CONTRACT_TEMPLATE, request.getContractTemplate(),
-                StringPool.CONTRACT_VERSION, request.getContractVersion()
-        ));
+                StringPool.CONTRACT_VERSION, request.getContractVersion()));
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                MIWVerifiableCredentialType.USE_CASE_FRAMEWORK_CONDITION
-        );
+                MIWVerifiableCredentialType.USE_CASE_FRAMEWORK_CONDITION);
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 subject,
                 types,
@@ -297,31 +286,28 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 holderWallet.getDid(),
                 miwSettings.vcContexts(),
                 miwSettings.vcExpiryDate(),
-                isSelfIssued
-        );
+                isSelfIssued);
 
-        //save in holder wallet
+        // save in holder wallet
         holdersCredential = holdersCredentialRepository.save(holdersCredential);
 
-        //Store Credential in issuers table
+        // Store Credential in issuers table
         IssuersCredential issuersCredential = IssuersCredential.of(holdersCredential);
         issuersCredential = create(issuersCredential);
 
-        //update summery cred
+        // update summery cred
         updateSummeryCredentials(
                 baseWallet.getDidDocument(),
                 privateKeyBytes,
                 baseWallet.getDid(),
                 holderWallet.getBpn(),
                 holderWallet.getDid(),
-                request.getType()
-        );
+                request.getType());
 
         log.debug(
                 "Framework VC of type ->{} issued to bpn ->{}",
                 StringEscapeUtils.escapeJava(request.getType()),
-                StringEscapeUtils.escapeJava(holderWallet.getBpn())
-        );
+                StringEscapeUtils.escapeJava(holderWallet.getBpn()));
 
         // Return VC
         return issuersCredential.getData();
@@ -330,30 +316,27 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Issue dismantler credential verifiable credential.
      *
-     * @param request   the request
-     * @param callerBPN the caller bpn
+     * @param cmd   command containing all required properties
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public VerifiableCredential issueDismantlerCredential(IssueDismantlerCredentialCommand command) {
+    public VerifiableCredential issueDismantlerCredential(IssueDismantlerCredentialCommand cmd) {
 
-        final String bpn = command.bpn().value();
-
-        //Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByIdentifier(bpn);
+        // Fetch Holder Wallet
+        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn());
 
         // Fetch Issuer Wallet
-        Wallet issuerWallet = commonService.getWalletByIdentifier(miwSettings.authorityWalletBpn());
+        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
 
-        validateAccess(command.caller().value(), issuerWallet);
+        validateAccess(cmd.caller(), issuerWallet);
 
-        //check duplicate
+        // check duplicate
         isCredentialExit(holderWallet.getDid(), MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL);
 
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(issuerWallet.getId());
 
-        //if base wallet issue credentials to itself
-        boolean isSelfIssued = isSelfIssued(bpn);
+        // if base wallet issue credentials to itself
+        boolean isSelfIssued = isSelfIssued(cmd.bpn().value());
 
         VerifiableCredentialSubject subject = new VerifiableCredentialSubject(Map.of(
                 StringPool.TYPE,
@@ -363,14 +346,13 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 StringPool.HOLDER_IDENTIFIER,
                 holderWallet.getBpn(),
                 StringPool.ACTIVITY_TYPE,
-                command.activityType().value,
+                cmd.activityType().value,
                 StringPool.ALLOWED_VEHICLE_BRANDS,
-                Objects.isNull(command.allowedVehicleBrands()) ? Collections.emptySet() : command.allowedVehicleBrands()
-        ));
+                cmd.allowedVehicleBrands() == null ? Collections.emptySet()
+                        : cmd.allowedVehicleBrands()));
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL);
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 subject,
                 types,
@@ -379,28 +361,25 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 holderWallet.getDid(),
                 miwSettings.vcContexts(),
                 miwSettings.vcExpiryDate(),
-                isSelfIssued
-        );
+                isSelfIssued);
 
-
-        //save in holder wallet
+        // save in holder wallet
         holdersCredential = holdersCredentialRepository.save(holdersCredential);
 
-        //Store Credential in issuers table
+        // Store Credential in issuers table
         IssuersCredential issuersCredential = IssuersCredential.of(holdersCredential);
         issuersCredential = create(issuersCredential);
 
-        //update summery VC
+        // update summery VC
         updateSummeryCredentials(
                 issuerWallet.getDidDocument(),
                 privateKeyBytes,
                 issuerWallet.getDid(),
                 holderWallet.getBpn(),
                 holderWallet.getDid(),
-                MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.DISMANTLER_CREDENTIAL);
 
-        log.debug("Dismantler VC issued to bpn -> {}", StringEscapeUtils.escapeJava(bpn));
+        log.debug("Dismantler VC issued to bpn -> {}", StringEscapeUtils.escapeJava(cmd.bpn().toString()));
 
         // Return VC
         return issuersCredential.getData();
@@ -409,35 +388,34 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Issue membership credential verifiable credential.
      *
-     * @param command command that contains the BPN to issue and the caller's BPN
+     * @param cmd   command containing all required properties
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public VerifiableCredential issueMembershipCredential(
-            IssueMembershipCredentialCommand command
-    ) {
+            IssueMembershipCredentialCommand cmd
+            ) {
 
-        //Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByIdentifier(command.bpn().value());
+        // Fetch Holder Wallet
+        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn());
 
-        //check duplicate
+        // check duplicate
         isCredentialExit(holderWallet.getDid(), VerifiableCredentialType.MEMBERSHIP_CREDENTIAL);
 
         // Fetch Issuer Wallet
-        Wallet issuerWallet = commonService.getWalletByIdentifier(miwSettings.authorityWalletBpn());
+        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
 
-        validateAccess(command.caller().value(), issuerWallet);
+        validateAccess(cmd.caller(), issuerWallet);
 
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(issuerWallet.getId());
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                VerifiableCredentialType.MEMBERSHIP_CREDENTIAL
-        );
+                VerifiableCredentialType.MEMBERSHIP_CREDENTIAL);
 
-        //if base wallet issue credentials to itself
-        boolean isSelfIssued = isSelfIssued(command.bpn().value());
+        // if base wallet issue credentials to itself
+        boolean isSelfIssued = isSelfIssued(cmd.bpn().value());
 
-        //VC Subject
+        // VC Subject
         VerifiableCredentialSubject verifiableCredentialSubject = new VerifiableCredentialSubject(Map.of(
                 StringPool.TYPE,
                 VerifiableCredentialType.MEMBERSHIP_CREDENTIAL,
@@ -451,8 +429,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 "Active",
                 StringPool.START_TIME,
                 Instant.now()
-                       .toString()
-        ));
+                        .toString()));
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 verifiableCredentialSubject,
                 types,
@@ -461,67 +438,61 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 holderWallet.getDid(),
                 miwSettings.vcContexts(),
                 miwSettings.vcExpiryDate(),
-                isSelfIssued
-        );
+                isSelfIssued);
 
-
-        //save in holder wallet
+        // save in holder wallet
         holdersCredential = holdersCredentialRepository.save(holdersCredential);
 
         IssuersCredential issuersCredential = IssuersCredential.of(holdersCredential);
 
-        //Store Credential in issuer table
+        // Store Credential in issuer table
         issuersCredential = create(issuersCredential);
 
-        //update summery VC
+        // update summery VC
         updateSummeryCredentials(
                 issuerWallet.getDidDocument(),
                 privateKeyBytes,
                 issuerWallet.getDid(),
                 holderWallet.getBpn(),
                 holderWallet.getDid(),
-                VerifiableCredentialType.MEMBERSHIP_CREDENTIAL
-        );
+                VerifiableCredentialType.MEMBERSHIP_CREDENTIAL);
 
         log.debug(
                 "Membership VC issued to bpn ->{}",
-                StringEscapeUtils.escapeJava(command.bpn().value())
-        );
+                StringEscapeUtils.escapeJava(cmd.bpn().toString()));
 
         // Return VC
         return issuersCredential.getData();
     }
-
 
     /**
      * Issue credential using base wallet
      *
      * @param holderDid the holder did
      * @param data      the data
-     * @param callerBpn the caller bpn
+     * @param callerBPN the caller bpn
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public VerifiableCredential issueCredentialUsingBaseWallet(
             String holderDid,
             Map<String, Object> data,
-            String callerBpn
-    ) {
-        //Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByIdentifier(holderDid);
+            BPN callerBPN) {
+        // Fetch Holder Wallet
+        Wallet holderWallet = commonService.getWalletByDid(new Identifier(holderDid));
 
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
 
-        //Summary VC can not be issued using API, as summary VC is issuing at runtime
+        // Summary VC can not be issued using API, as summary VC is issuing at runtime
         verifiableCredential.getTypes()
-                            .forEach(type -> Validate.isTrue(type.equals(MIWVerifiableCredentialType.SUMMARY_CREDENTIAL))
-                                                     .launch(new BadDataException("Can not issue " +
-                                                                                  MIWVerifiableCredentialType.SUMMARY_CREDENTIAL +
-                                                                                  " type VC using API")));
+                .forEach(type -> Validate.isTrue(type.equals(MIWVerifiableCredentialType.SUMMARY_CREDENTIAL))
+                        .launch(new BadDataException("Can not issue " +
+                                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL +
+                                " type VC using API")));
 
-        Wallet issuerWallet = commonService.getWalletByIdentifier(verifiableCredential.getIssuer().toString());
+        Wallet issuerWallet = commonService.getWalletByDid(new Identifier(verifiableCredential.getIssuer().toString()));
 
-        validateAccess(callerBpn, issuerWallet);
+        validateAccess(callerBPN, issuerWallet);
 
         // get issuer Key
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(issuerWallet.getId());
@@ -531,29 +502,26 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         // Create Credential
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 verifiableCredential.getCredentialSubject()
-                                    .get(0),
+                        .get(0),
                 verifiableCredential.getTypes(),
                 issuerWallet.getDidDocument(),
                 privateKeyBytes,
                 holderWallet.getDid(),
                 verifiableCredential.getContext(),
                 Date.from(verifiableCredential.getExpirationDate()),
-                isSelfIssued
-        );
+                isSelfIssued);
 
-
-        //save in holder wallet
+        // save in holder wallet
         holdersCredential = holdersCredentialRepository.save(holdersCredential);
 
-        //Store Credential in issuers table
+        // Store Credential in issuers table
         IssuersCredential issuersCredential = IssuersCredential.of(holdersCredential);
         issuersCredential = create(issuersCredential);
 
         log.debug(
                 "VC type of {} issued to bpn ->{}",
                 StringEscapeUtils.escapeJava(verifiableCredential.getTypes().toString()),
-                StringEscapeUtils.escapeJava(holderWallet.getBpn())
-        );
+                StringEscapeUtils.escapeJava(holderWallet.getBpn()));
 
         // Return VC
         return issuersCredential.getData();
@@ -573,8 +541,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         DidResolver didResolver = new DidWebResolver(
                 HttpClient.newHttpClient(),
                 new DidWebParser(),
-                miwSettings.enforceHttps()
-        );
+                miwSettings.enforceHttps());
 
         String proofTye = verifiableCredential.getProof().get(StringPool.TYPE).toString();
         LinkedDataProofValidation proofValidation;
@@ -590,7 +557,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
 
         Map<String, Object> response = new TreeMap<>();
 
-        //check expiry
+        // check expiry
         boolean dateValidation = CommonService.validateExpiry(withCredentialExpiryDate, verifiableCredential, response);
 
         response.put(StringPool.VALID, valid && dateValidation);
@@ -599,17 +566,15 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         return response;
     }
 
-
-    private void validateAccess(String callerBpn, Wallet issuerWallet) {
-        //validate BPN access, VC must be issued by base wallet
-        Validate.isFalse(callerBpn.equals(issuerWallet.getBpn()))
+    private void validateAccess(BPN callerBpn, Wallet issuerWallet) {
+        // validate BPN access, VC must be issued by base wallet
+        Validate.isFalse(callerBpn.value().equals(issuerWallet.getBpn()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
-        //issuer must be base wallet
+        // issuer must be base wallet
         Validate.isFalse(issuerWallet.getBpn().equals(miwSettings.authorityWalletBpn()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
     }
-
 
     private void isCredentialExit(String holderDid, String credentialType) {
         Validate.isTrue(holdersCredentialRepository.existsByHolderDidAndType(holderDid, credentialType))
@@ -619,7 +584,6 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     private boolean isSelfIssued(String holderBpn) {
         return holderBpn.equals(miwSettings.authorityWalletBpn());
     }
-
 
     /**
      * Update summery credentials.
@@ -636,20 +600,19 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             String issuerDid,
             String holderBpn,
             String holderDid,
-            String type
-    ) {
+            String type) {
 
-        //get last issued summary vc to holder to update items
+        // get last issued summary vc to holder to update items
         Page<IssuersCredential> filter = getLastIssuedSummaryCredential(issuerDid, holderDid);
         List<String> items;
         if (!filter.getContent().isEmpty()) {
             IssuersCredential issuersCredential = filter.getContent().get(0);
 
-            //check if summery VC has subject
+            // check if summery VC has subject
             Validate.isTrue(issuersCredential.getData().getCredentialSubject().isEmpty())
                     .launch(new BadDataException("VC subject not found in existing su,,ery VC"));
 
-            //Check if we have only one subject in summery VC
+            // Check if we have only one subject in summery VC
             Validate.isTrue(issuersCredential.getData().getCredentialSubject().size() > 1)
                     .launch(new BadDataException("VC subjects can more then 1 in case of summery VC"));
 
@@ -668,22 +631,21 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         }
         log.debug("Issuing summary VC with items ->{}", StringEscapeUtils.escapeJava(items.toString()));
 
-        //get summery VC of holder
+        // get summery VC of holder
         List<HoldersCredential> vcs = holdersCredentialRepository.getByHolderDidAndIssuerDidAndTypeAndStored(
                 holderDid,
                 issuerDid,
                 MIWVerifiableCredentialType.SUMMARY_CREDENTIAL,
-                false
-        ); //deleted only not stored VC
+                false); // deleted only not stored VC
         if (CollectionUtils.isEmpty(vcs)) {
             log.debug("No summery VC found for did ->{}, checking in issuer", StringEscapeUtils.escapeJava(holderDid));
         } else {
-            //delete old summery VC from holder table, delete only not stored VC
+            // delete old summery VC from holder table, delete only not stored VC
             log.debug("Deleting older summary VC fir bpn -{}", holderBpn);
             holdersCredentialRepository.deleteAll(vcs);
         }
 
-        //issue new summery VC
+        // issue new summery VC
         boolean isSelfIssued = isSelfIssued(holderBpn);
 
         VerifiableCredentialSubject subject = new VerifiableCredentialSubject(Map.of(
@@ -696,13 +658,11 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 StringPool.TYPE,
                 MIWVerifiableCredentialType.SUMMARY_CREDENTIAL,
                 StringPool.CONTRACT_TEMPLATE,
-                miwSettings.contractTemplatesUrl()
-        ));
+                miwSettings.contractTemplatesUrl()));
 
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
         HoldersCredential holdersCredential = CommonUtils.getHoldersCredential(
                 subject,
                 types,
@@ -711,14 +671,12 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 holderDid,
                 miwSettings.summaryVcContexts(),
                 miwSettings.vcExpiryDate(),
-                isSelfIssued
-        );
+                isSelfIssued);
 
-
-        //save in holder wallet
+        // save in holder wallet
         holdersCredentialRepository.save(holdersCredential);
 
-        //Store Credential in issuers table
+        // Store Credential in issuers table
         issuersCredentialRepository.save(IssuersCredential.of(holdersCredential));
 
         log.info("Summery VC updated for holder did -> {}", StringEscapeUtils.escapeJava(holderDid));
@@ -727,7 +685,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     private Page<IssuersCredential> getLastIssuedSummaryCredential(String issuerDid, String holderDid) {
         FilterRequest filterRequest = new FilterRequest();
 
-        //we need latest one record
+        // we need latest one record
         filterRequest.setPage(0);
         filterRequest.setSize(1);
         Sort sort = new Sort();

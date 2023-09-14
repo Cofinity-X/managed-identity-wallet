@@ -24,7 +24,12 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 import com.smartsensesolutions.java.commons.sort.SortType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.GetCredentialsApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueDismantlerCredentialApiDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueFrameworkCredentialApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueMembershipCredentialApiDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueVerifiableCredentialUsingBaseWalletApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.ValidateVerifiableCredentialApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.ActivityType;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
@@ -32,7 +37,7 @@ import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
@@ -69,18 +74,18 @@ public class IssuersCredentialController extends BaseController {
     /**
      * Gets credentials.
      *
-     * @param credentialSearch object holding all query parameters including default values
+     * @param credentialSearch object holding all query parameters including default
+     *                         values
      * @param principal        the principal
      * @return the credentials
      */
     @GetMapping(path = RestURI.ISSUERS_CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.GetCredentialsApiDocs
+    @GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             IssuerVerifiableCredentialSearch credentialSearch,
-            Principal principal
-    ) {
+            Principal principal) {
 
-        CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
+        CredentialSearchCommand.Builder searchBuilder = CredentialSearchCommand.builder();
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getHolderIdentifier())
@@ -92,34 +97,34 @@ public class IssuersCredentialController extends BaseController {
                 });
 
         searchBuilder.withSort(
-                             SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
-                             SortType.valueOf(credentialSearch.getSortType().toUpperCase())
-                     )
-                     .withPageNumber(credentialSearch.getPageNumber())
-                     .withPageSize(credentialSearch.getSize())
-                     .withCallerBpn(new BPN(getBPNFromToken(principal)));
+                SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
+                .withPageNumber(credentialSearch.getPageNumber())
+                .withPageSize(credentialSearch.getSize())
+                .withCallerBpn(getBPNFromToken(principal));
 
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(issuersCredentialService.getCredentials(
-                                     searchBuilder.build()));
+                .body(issuersCredentialService.getCredentials(
+                        searchBuilder.build()));
     }
 
     /**
      * Issue membership credential response entity.
      *
-     * @param issueMembershipCredentialRequest the issue membership credential request
+     * @param issueMembershipCredentialRequest the issue membership credential
+     *                                         request
      * @param principal                        the principal
      * @return the response entity
      */
     @PostMapping(path = RestURI.CREDENTIALS_ISSUER_MEMBERSHIP, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.IssueMembershipCredentialApiDoc
+    @IssueMembershipCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueMembershipCredential(
             @Valid @RequestBody IssueMembershipCredentialRequest issueMembershipCredentialRequest,
             Principal principal
     ) {
 
         IssueMembershipCredentialCommand cmd = new IssueMembershipCredentialCommand(
-                new BPN(issueMembershipCredentialRequest.getBpn()), new BPN(getBPNFromToken(principal)));
+                new BPN(issueMembershipCredentialRequest.getBpn()), getBPNFromToken(principal));
 
         return ResponseEntity.status(HttpStatus.CREATED)
                              .body(issuersCredentialService.issueMembershipCredential(cmd));
@@ -133,7 +138,7 @@ public class IssuersCredentialController extends BaseController {
      * @return the response entity
      */
     @PostMapping(path = RestURI.CREDENTIALS_ISSUER_DISMANTLER, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.IssueDismantlerCredentialApiDoc
+    @IssueDismantlerCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueDismantlerCredential(
             @Valid @RequestBody IssueDismantlerCredentialRequest request,
             Principal principal
@@ -144,8 +149,8 @@ public class IssuersCredentialController extends BaseController {
                 .withActivityType(ActivityType.valueOf(
                         request.getActivityType()))
                 .withBpn(new BPN(request.getBpn()))
-                .withCaller(new BPN(getBPNFromToken(
-                        principal)))
+                .withCaller(getBPNFromToken(
+                        principal))
                 .withAllowedVehicleBrands(request.getAllowedVehicleBrands())
                 .build();
 
@@ -161,16 +166,14 @@ public class IssuersCredentialController extends BaseController {
      * @return the response entity
      */
     @PostMapping(path = RestURI.API_CREDENTIALS_ISSUER_FRAMEWORK, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.IssueFrameworkCredentialApiDocs
+    @IssueFrameworkCredentialApiDocs
     public ResponseEntity<VerifiableCredential> issueFrameworkCredential(
             @Valid @RequestBody IssueFrameworkCredentialRequest request,
-            Principal principal
-    ) {
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueFrameworkCredential(
-                                     request,
-                                     getBPNFromToken(principal)
-                             ));
+                .body(issuersCredentialService.issueFrameworkCredential(
+                        request,
+                        getBPNFromToken(principal)));
     }
 
     /**
@@ -181,13 +184,12 @@ public class IssuersCredentialController extends BaseController {
      * @return the response entity
      */
     @PostMapping(path = RestURI.CREDENTIALS_VALIDATION, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.ValidateVerifiableCredentialApiDocs
+    @ValidateVerifiableCredentialApiDocs
     public ResponseEntity<Map<String, Object>> credentialsValidation(
             @RequestBody Map<String, Object> data,
-            boolean withCredentialExpiryDate
-    ) {
+            boolean withCredentialExpiryDate) {
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(issuersCredentialService.credentialsValidation(data, withCredentialExpiryDate));
+                .body(issuersCredentialService.credentialsValidation(data, withCredentialExpiryDate));
     }
 
     /**
@@ -199,17 +201,15 @@ public class IssuersCredentialController extends BaseController {
      * @return the response entity
      */
     @PostMapping(path = RestURI.ISSUERS_CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @IssuersCredentialControllerApiDocs.IssueVerifiableCredentialUsingBaseWalletApiDocs
+    @IssueVerifiableCredentialUsingBaseWalletApiDocs
     public ResponseEntity<VerifiableCredential> issueCredentialUsingBaseWallet(
             @RequestParam(name = "holderDid") String holderDid,
             @RequestBody Map<String, Object> data,
-            Principal principal
-    ) {
+            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(issuersCredentialService.issueCredentialUsingBaseWallet(
-                                     holderDid,
-                                     data,
-                                     getBPNFromToken(principal)
-                             ));
+                .body(issuersCredentialService.issueCredentialUsingBaseWallet(
+                        holderDid,
+                        data,
+                        getBPNFromToken(principal)));
     }
 }

@@ -22,6 +22,7 @@
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -42,15 +43,16 @@ public class BaseController {
      * @param principal the principal
      * @return the bpn from token
      */
-    public String getBPNFromToken(Principal principal) {
+    public BPN getBPNFromToken(Principal principal) {
         Object principal1 = ((JwtAuthenticationToken) principal).getPrincipal();
         Jwt jwt = (Jwt) principal1;
 
-        //this will misbehave if we have more then one claims with different case
+        // this will misbehave if we have more then one claims with different case
         // ie. BPN=123456 and bpn=789456
         Map<String, Object> claims = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         claims.putAll(jwt.getClaims());
-        Validate.isFalse(claims.containsKey(StringPool.BPN)).launch(new ForbiddenException("Invalid token, BPN not found"));
-        return claims.get(StringPool.BPN).toString();
+        Validate.isFalse(claims.containsKey(StringPool.BPN))
+                .launch(new ForbiddenException("Invalid token, BPN not found"));
+        return new BPN(claims.get(StringPool.BPN).toString());
     }
 }

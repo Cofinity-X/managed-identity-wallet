@@ -22,6 +22,7 @@
 package org.eclipse.tractusx.managedidentitywallets.config;
 
 import jakarta.validation.constraints.NotNull;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -43,7 +44,7 @@ public class MIWSettings {
     @NotNull
     private SecretKey encryptionKey;
 
-    private String authorityWalletBpn;
+    private BPN authorityWalletBpn;
 
     private String authorityWalletDid;
 
@@ -80,11 +81,11 @@ public class MIWSettings {
         this.encryptionKey = encryptionKey;
     }
 
-    public String authorityWalletBpn() {
+    public BPN authorityWalletBpn() {
         return authorityWalletBpn;
     }
 
-    public void setAuthorityWalletBpn(final String authorityWalletBpn) {
+    public void setAuthorityWalletBpn(final BPN authorityWalletBpn) {
         this.authorityWalletBpn = authorityWalletBpn;
     }
 

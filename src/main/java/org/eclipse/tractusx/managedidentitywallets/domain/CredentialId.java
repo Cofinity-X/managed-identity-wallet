@@ -25,14 +25,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * CredentialId is a unique identifier for a credential.
  */
 public class CredentialId {
 
     private final String value;
 
-
-    // TODO make regex accept this did:web:localhost%3A49243:BPNL000000000000#a609938f-6d89-4e7f-aa40-9ca325c613be
+    // TODO make regex accept this
+    // did:web:localhost%3A49243:BPNL000000000000#a609938f-6d89-4e7f-aa40-9ca325c613be
     private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPNL[0-9a-f]{12}\\b#[0-9a-f]{8}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-([0-9a-f]{12})$";
 
     public CredentialId(final String credentialId) {
@@ -42,7 +42,6 @@ public class CredentialId {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("credentialId is %s not valid".formatted(credentialId));
         }
-
 
         this.value = credentialId;
     }

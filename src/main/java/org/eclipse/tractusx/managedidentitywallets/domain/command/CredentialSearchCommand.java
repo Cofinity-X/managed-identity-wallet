@@ -33,9 +33,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @author Pascal Manaras <a href="mailto:manaras@xignsys.com">manaras@xignsys.com</a>
+ * CredentialSearch is a search for credentials.
  */
-public class CredentialSearch {
+public class CredentialSearchCommand {
 
     private final CredentialId credentialId;
 
@@ -51,7 +51,7 @@ public class CredentialSearch {
 
     private final BPN callerBpn;
 
-    private CredentialSearch(Builder builder) {
+    private CredentialSearchCommand(Builder builder) {
         credentialId = builder.id;
         identifier = builder.identifier;
         typesToSearch = builder.typesToSearch;
@@ -109,11 +109,10 @@ public class CredentialSearch {
 
         private BPN callerBpn;
 
-
-        public CredentialSearch build() throws IllegalStateException {
+        public CredentialSearchCommand build() throws IllegalStateException {
             validate();
 
-            return new CredentialSearch(this);
+            return new CredentialSearchCommand(this);
         }
 
         public Builder withCredentialId(final CredentialId id) throws NullPointerException {
@@ -140,7 +139,6 @@ public class CredentialSearch {
             this.sort.setColumn(sortColumn.value);
             return this;
         }
-
 
         public Builder withPageNumber(int pageNumber) {
             if (pageNumber < 0)

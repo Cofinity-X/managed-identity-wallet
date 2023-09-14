@@ -25,15 +25,15 @@ import com.smartsensesolutions.java.commons.sort.SortType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs.GetCredentialsApiDocs;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialControllerApiDocs.IssueCredentialApiDoc;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
-import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
@@ -71,12 +71,12 @@ public class HoldersCredentialController extends BaseController {
      * @return the credentials
      */
     @GetMapping(path = RestURI.CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
-    @HoldersCredentialControllerApiDocs.GetCredentialsApiDocs
+    @GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal) {
 
-        CredentialSearch.Builder searchBuilder = CredentialSearch.builder();
+        CredentialSearchCommand.Builder searchBuilder = CredentialSearchCommand.builder();
         Optional.ofNullable(credentialSearch.getCredentialId())
                 .ifPresent(c -> searchBuilder.withCredentialId(new CredentialId(c)));
         Optional.ofNullable(credentialSearch.getIssuerIdentifier())
@@ -92,7 +92,7 @@ public class HoldersCredentialController extends BaseController {
                         SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
                 .withPageNumber(credentialSearch.getPageNumber())
                 .withPageSize(credentialSearch.getSize())
-                .withCallerBpn(new BPN(getBPNFromToken(principal)));
+                .withCallerBpn(getBPNFromToken(principal));
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(holdersCredentialService.getCredentials(
@@ -107,7 +107,7 @@ public class HoldersCredentialController extends BaseController {
      * @return the response entity`
      */
     @PostMapping(path = RestURI.CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @HoldersCredentialControllerApiDocs.IssueCredentialApiDoc
+    @IssueCredentialApiDoc
     public ResponseEntity<VerifiableCredential> issueCredential(
             @RequestBody Map<String, Object> data,
             Principal principal) {
