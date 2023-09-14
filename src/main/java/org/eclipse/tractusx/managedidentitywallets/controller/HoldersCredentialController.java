@@ -29,10 +29,11 @@ import org.eclipse.tractusx.managedidentitywallets.apidocs.HoldersCredentialCont
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
-import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSearch;
+
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
