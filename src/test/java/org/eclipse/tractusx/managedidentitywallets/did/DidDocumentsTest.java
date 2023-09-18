@@ -40,8 +40,9 @@ import org.springframework.test.context.ContextConfiguration;
 
 import java.util.UUID;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {ManagedIdentityWalletsApplication.class})
-@ContextConfiguration(initializers = {TestContextInitializer.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
+        ManagedIdentityWalletsApplication.class })
+@ContextConfiguration(initializers = { TestContextInitializer.class })
 class DidDocumentsTest {
 
     @Autowired
@@ -54,8 +55,16 @@ class DidDocumentsTest {
 
     @Test
     void getDidDocumentInvalidBpn404() {
-        ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class, UUID.randomUUID().toString());
+        ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class,
+                TestUtils.randomBpn());
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
+    }
+
+    @Test
+    void getDidDocumentInvalidBpn500() {
+        ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class,
+                UUID.randomUUID().toString());
+        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
     }
 
     @Test
@@ -71,7 +80,8 @@ class DidDocumentsTest {
 
     @Test
     void getDidResolveInvalidBpn404() {
-        ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_RESOLVE, String.class, UUID.randomUUID().toString());
+        ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_RESOLVE, String.class,
+                TestUtils.randomBpn().toString());
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
     }
 
@@ -90,6 +100,6 @@ class DidDocumentsTest {
         CreateWalletRequest createWalletRequest = new CreateWalletRequest();
         createWalletRequest.setBpn(bpn);
         createWalletRequest.setName("wallet_" + bpn);
-        return walletService.createWallet(createWalletRequest,miwSettings.authorityWalletBpn());
+        return walletService.createWallet(createWalletRequest, miwSettings.authorityWalletBpn());
     }
 }

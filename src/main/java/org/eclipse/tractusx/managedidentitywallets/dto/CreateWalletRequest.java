@@ -25,7 +25,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-
 /**
  * The type Create wallet request.
  */
