@@ -61,8 +61,7 @@ public class TestUtils {
             String bpn,
             String name,
             TestRestTemplate testTemplate,
-            String baseBPN
-    ) {
+            String baseBPN) {
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(baseBPN);
 
         CreateWalletRequest request = CreateWalletRequest.builder().bpn(bpn).name(name).build();
@@ -91,35 +90,33 @@ public class TestUtils {
                 """;
 
         Wallet wallet = Wallet.builder()
-                              .bpn(bpn)
-                              .did(did)
-                              .didDocument(DidDocument.fromJson(didDocument))
-                              .algorithm(StringPool.ED_25519)
-                              .name(bpn)
-                              .build();
+                .bpn(bpn)
+                .did(did)
+                .didDocument(DidDocument.fromJson(didDocument))
+                .algorithm(StringPool.ED_25519)
+                .name(bpn)
+                .build();
         return walletRepository.save(wallet);
     }
 
     public static void checkVC(VerifiableCredential verifiableCredential, MIWSettings miwSettings) {
-        //text context URL
+        // text context URL
         Assertions.assertEquals(verifiableCredential.getContext().size(), miwSettings.vcContexts().size());
         for (URI link : verifiableCredential.getContext()) {
             Assertions.assertTrue(miwSettings.vcContexts().contains(link));
         }
 
-        //check expiry date
+        // check expiry date
         Assertions.assertEquals(
                 0,
                 verifiableCredential.getExpirationDate()
-                                    .compareTo(miwSettings.vcExpiryDate().toInstant())
-        );
+                        .compareTo(miwSettings.vcExpiryDate().toInstant()));
     }
 
     public static ResponseEntity<String> issueMembershipVC(
             TestRestTemplate restTemplate,
             String bpn,
-            String baseWalletBpn
-    ) {
+            String baseWalletBpn) {
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(baseWalletBpn);
         IssueMembershipCredentialRequest request = IssueMembershipCredentialRequest.builder().bpn(bpn).build();
         HttpEntity<IssueMembershipCredentialRequest> entity = new HttpEntity<>(request, headers);
@@ -129,19 +126,18 @@ public class TestUtils {
 
     public static IssueFrameworkCredentialRequest getIssueFrameworkCredentialRequest(String bpn, String type) {
         IssueFrameworkCredentialRequest twinRequest = IssueFrameworkCredentialRequest.builder()
-                                                                                     .contractTemplate(
-                                                                                             "http://localhost")
-                                                                                     .contractVersion("v1")
-                                                                                     .type(type)
-                                                                                     .holderIdentifier(bpn)
-                                                                                     .build();
+                .contractTemplate(
+                        "http://localhost")
+                .contractVersion("v1")
+                .type(type)
+                .holderIdentifier(bpn)
+                .build();
         return twinRequest;
     }
 
-
     public static Wallet getWalletFromString(String body) throws JsonProcessingException {
         JSONObject jsonObject = new JSONObject(body);
-        //convert DidDocument
+        // convert DidDocument
         JSONObject didDocument = jsonObject.getJSONObject(StringPool.DID_DOCUMENT);
         jsonObject.remove(StringPool.DID_DOCUMENT);
 
@@ -155,15 +151,14 @@ public class TestUtils {
         Wallet wallet1 = objectMapper.readValue(jsonObject.toString(), Wallet.class);
         wallet1.setDidDocument(DidDocument.fromJson(didDocument.toString()));
 
-        //convert VC
+        // convert VC
         if (credentialArray != null) {
             List<VerifiableCredential> verifiableCredentials = new ArrayList<>(credentialArray.length());
             for (int i = 0; i < credentialArray.length(); i++) {
                 JSONObject object = credentialArray.getJSONObject(i);
                 verifiableCredentials.add(new VerifiableCredential(objectMapper.readValue(
                         object.toString(),
-                        Map.class
-                )));
+                        Map.class)));
             }
             wallet1.setVerifiableCredentials(verifiableCredentials);
         }
@@ -171,64 +166,56 @@ public class TestUtils {
         return wallet1;
     }
 
-
     public static String getSummaryCredentialId(
             String holderDID,
-            HoldersCredentialRepository holdersCredentialRepository
-    ) {
+            HoldersCredentialRepository holdersCredentialRepository) {
         List<HoldersCredential> holderVCs = holdersCredentialRepository.getByHolderDidAndType(
                 holderDID,
-                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
         Assertions.assertEquals(1, holderVCs.size());
         return holderVCs.get(0).getData().getId().toString();
     }
 
     public static void checkSummaryCredential(
             String issuerDID, String holderDID, HoldersCredentialRepository holdersCredentialRepository,
-            IssuersCredentialRepository issuersCredentialRepository, String type, String previousSummaryCredentialId
-    ) {
+            IssuersCredentialRepository issuersCredentialRepository, String type, String previousSummaryCredentialId) {
 
-        //get VC from holder of Summary type
+        // get VC from holder of Summary type
         List<HoldersCredential> holderVCs = holdersCredentialRepository.getByHolderDidAndType(
                 holderDID,
-                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL
-        );
+                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
         Assertions.assertEquals(1, holderVCs.size());
         VerifiableCredential vc = holderVCs.get(0).getData();
         VerifiableCredentialSubject subject = vc.getCredentialSubject().get(0);
 
-        //check if type is in items
+        // check if type is in items
         List<String> list = (List<String>) subject.get(StringPool.ITEMS);
         Assertions.assertTrue(list.contains(type));
 
-        //check in issuer table
+        // check in issuer table
         List<IssuersCredential> issuerVCs = issuersCredentialRepository.getByIssuerDidAndHolderDidAndType(issuerDID,
-                                                                                                          holderDID,
-                                                                                                          MIWVerifiableCredentialType.SUMMARY_CREDENTIAL
-        );
+                holderDID,
+                MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
         IssuersCredential issuersCredential = issuerVCs.stream()
-                                                       .filter(issuerVC -> issuerVC.getCredentialId()
-                                                                                   .equalsIgnoreCase(vc.getId()
-                                                                                                       .toString()))
-                                                       .findFirst()
-                                                       .orElse(null);
+                .filter(issuerVC -> issuerVC.getCredentialId()
+                        .equalsIgnoreCase(vc.getId()
+                                .toString()))
+                .findFirst()
+                .orElse(null);
         Assertions.assertNotNull(issuersCredential);
         IssuersCredential previousIssuersCredential = issuerVCs.stream()
-                                                               .filter(issuerVC -> issuerVC.getCredentialId()
-                                                                                           .equalsIgnoreCase(
-                                                                                                   previousSummaryCredentialId))
-                                                               .findFirst()
-                                                               .orElse(null);
+                .filter(issuerVC -> issuerVC.getCredentialId()
+                        .equalsIgnoreCase(
+                                previousSummaryCredentialId))
+                .findFirst()
+                .orElse(null);
         Assertions.assertNotNull(previousIssuersCredential);
     }
-
 
     @NotNull
     public static List<VerifiableCredential> getVerifiableCredentials(
             ResponseEntity<String> response,
-            ObjectMapper objectMapper
-    ) throws JsonProcessingException {
+            ObjectMapper objectMapper) throws JsonProcessingException {
         Map<String, Object> map = objectMapper.readValue(response.getBody(), Map.class);
 
         List<Map<String, Object>> vcs = (List<Map<String, Object>>) map.get("content");
@@ -242,9 +229,9 @@ public class TestUtils {
 
     public static String randomBpn() {
         Random r = new Random();
-        int low = 10;
-        int high = 99;
-        int result = r.nextInt(high - low) + low;
-        return "BPNL0000000000" + result;
+        long low = 100000000000l;
+        long high = 999999999999l;
+        long result = (long) (r.nextDouble() * (high - low)) + low;
+        return "BPNL" + result;
     }
 }

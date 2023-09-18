@@ -64,8 +64,9 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {ManagedIdentityWalletsApplication.class})
-@ContextConfiguration(initializers = {TestContextInitializer.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
+        ManagedIdentityWalletsApplication.class })
+@ContextConfiguration(initializers = { TestContextInitializer.class })
 @ExtendWith(MockitoExtension.class)
 class HoldersCredentialTest {
 
@@ -83,20 +84,18 @@ class HoldersCredentialTest {
     @Autowired
     private IssuersCredentialController credentialController;
 
-
     @Test
     void issueCredentialTestWithInvalidBPNAccess403() throws JsonProcessingException {
         String bpn = TestUtils.randomBpn();
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         String type = "TestCredential";
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders("not valid BPN");
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(TestUtils.randomBpn());
 
         ResponseEntity<String> response = issueVC(bpn, did, type, headers);
 
 
         Assertions.assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value());
     }
-
 
     @Test
     void issueCredentialTest200() throws JsonProcessingException {
@@ -107,9 +106,9 @@ class HoldersCredentialTest {
 
         ResponseEntity<String> response = issueVC(bpn, did, type, headers);
 
-
         Assertions.assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
-        VerifiableCredential verifiableCredential = new VerifiableCredential(new ObjectMapper().readValue(response.getBody(), Map.class));
+        VerifiableCredential verifiableCredential = new VerifiableCredential(
+                new ObjectMapper().readValue(response.getBody(), Map.class));
         Assertions.assertNotNull(verifiableCredential.getProof());
 
         List<HoldersCredential> credentials = holdersCredentialRepository.getByHolderDidAndType(did, type);
@@ -118,7 +117,6 @@ class HoldersCredentialTest {
         Assertions.assertTrue(credentials.get(0).isSelfIssued());
         Assertions.assertFalse(credentials.get(0).isStored());
     }
-
 
     @Test
     void getCredentialsTest403() {
@@ -138,7 +136,7 @@ class HoldersCredentialTest {
         String bpn = "BPNL000000000006";
         String did = DidWebFactory.fromHostnameAndPath(miwSettings.host(), bpn).toString();
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
-        //save wallet
+        // save wallet
         TestUtils.createWallet(bpn, did, walletRepository);
         TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn().value());
         String vcList = """
@@ -154,39 +152,44 @@ class HoldersCredentialTest {
 
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            IssueFrameworkCredentialRequest request = TestUtils.getIssueFrameworkCredentialRequest(bpn, jsonObject.get(StringPool.TYPE).toString());
-            HttpEntity<IssueFrameworkCredentialRequest> entity = new HttpEntity<>(request, AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value())); //ony base wallet can issue VC
-            ResponseEntity<String> exchange = restTemplate.exchange(RestURI.API_CREDENTIALS_ISSUER_FRAMEWORK, HttpMethod.POST, entity, String.class);
+            IssueFrameworkCredentialRequest request = TestUtils.getIssueFrameworkCredentialRequest(bpn,
+                    jsonObject.get(StringPool.TYPE).toString());
+            HttpEntity<IssueFrameworkCredentialRequest> entity = new HttpEntity<>(request,
+                    AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value())); // ony base
+                                                                                                            // wallet
+                                                                                                            // can issue
+                                                                                                            // VC
+            ResponseEntity<String> exchange = restTemplate.exchange(RestURI.API_CREDENTIALS_ISSUER_FRAMEWORK,
+                    HttpMethod.POST, entity, String.class);
             Assertions.assertEquals(exchange.getStatusCode().value(), HttpStatus.CREATED.value());
         }
 
-
         HttpEntity<Map> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(RestURI.CREDENTIALS + "?issuerIdentifier={did}"
-                , HttpMethod.GET, entity, String.class, baseDID);
+        ResponseEntity<String> response = restTemplate.exchange(RestURI.CREDENTIALS + "?issuerIdentifier={did}",
+                HttpMethod.GET, entity, String.class, baseDID);
         List<VerifiableCredential> credentialList = TestUtils.getVerifiableCredentials(response, objectMapper);
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        Assertions.assertEquals(7, Objects.requireNonNull(credentialList).size()); //5  framework + 1 BPN + 1 Summary
+        Assertions.assertEquals(7, Objects.requireNonNull(credentialList).size()); // 5 framework + 1 BPN + 1 Summary
 
-        response = restTemplate.exchange(RestURI.CREDENTIALS + "?credentialId={id}"
-                , HttpMethod.GET, entity, String.class, credentialList.get(0).getId());
+        response = restTemplate.exchange(RestURI.CREDENTIALS + "?credentialId={id}", HttpMethod.GET, entity,
+                String.class, credentialList.get(0).getId());
         credentialList = TestUtils.getVerifiableCredentials(response, objectMapper);
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         Assertions.assertEquals(1, Objects.requireNonNull(credentialList).size());
 
         List<String> list = new ArrayList<>();
         list.add(MIWVerifiableCredentialType.MEMBERSHIP_CREDENTIAL);
-        response = restTemplate.exchange(RestURI.CREDENTIALS + "?type={list}"
-                , HttpMethod.GET, entity, String.class, String.join(",", list));
+        response = restTemplate.exchange(RestURI.CREDENTIALS + "?type={list}", HttpMethod.GET, entity, String.class,
+                String.join(",", list));
         credentialList = TestUtils.getVerifiableCredentials(response, objectMapper);
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         Assertions.assertEquals(1, Objects.requireNonNull(credentialList).size());
 
         list = new ArrayList<>();
         list.add(MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
-        response = restTemplate.exchange(RestURI.CREDENTIALS + "?type={list}"
-                , HttpMethod.GET, entity, String.class, String.join(",", list));
+        response = restTemplate.exchange(RestURI.CREDENTIALS + "?type={list}", HttpMethod.GET, entity, String.class,
+                String.join(",", list));
         credentialList = TestUtils.getVerifiableCredentials(response, objectMapper);
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         Assertions.assertEquals(1, credentialList.size());
@@ -200,16 +203,15 @@ class HoldersCredentialTest {
 
     }
 
-
     @Test
     void validateCredentialsWithInvalidVC() throws com.fasterxml.jackson.core.JsonProcessingException {
-        //data setup
+        // data setup
         Map<String, Object> map = issueVC();
 
-        //service call
+        // service call
         try (MockedStatic<LinkedDataProofValidation> utils = Mockito.mockStatic(LinkedDataProofValidation.class)) {
 
-            //mock setup
+            // mock setup
             LinkedDataProofValidation mock = Mockito.mock(LinkedDataProofValidation.class);
             utils.when(() -> {
                 LinkedDataProofValidation.newInstance(Mockito.any(SignatureType.class), Mockito.any(DidResolver.class));
@@ -221,18 +223,17 @@ class HoldersCredentialTest {
         }
     }
 
-
     @Test
     @DisplayName("validate VC with date check true, it should return true")
     void validateCredentialsWithExpiryCheckTrue() throws com.fasterxml.jackson.core.JsonProcessingException {
 
-        //data setup
+        // data setup
         Map<String, Object> map = issueVC();
 
-        //service call
+        // service call
         try (MockedStatic<LinkedDataProofValidation> utils = Mockito.mockStatic(LinkedDataProofValidation.class)) {
 
-            //mock setup
+            // mock setup
             LinkedDataProofValidation mock = Mockito.mock(LinkedDataProofValidation.class);
             utils.when(() -> {
                 LinkedDataProofValidation.newInstance(Mockito.any(SignatureType.class), Mockito.any(DidResolver.class));
@@ -241,7 +242,8 @@ class HoldersCredentialTest {
 
             Map<String, Object> stringObjectMap = credentialController.credentialsValidation(map, true).getBody();
             Assertions.assertTrue(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALID).toString()));
-            Assertions.assertTrue(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
+            Assertions
+                    .assertTrue(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
         }
     }
 
@@ -249,17 +251,16 @@ class HoldersCredentialTest {
     @DisplayName("validate expired VC with date check false, it should return true")
     void validateCredentialsWithExpiryCheckFalse() throws com.fasterxml.jackson.core.JsonProcessingException {
 
-        //data setup
+        // data setup
         Map<String, Object> map = issueVC();
-        //modify expiry date
+        // modify expiry date
         Instant instant = Instant.now().minusSeconds(60);
         map.put("expirationDate", instant.toString());
 
-
-        //service call
+        // service call
         try (MockedStatic<LinkedDataProofValidation> utils = Mockito.mockStatic(LinkedDataProofValidation.class)) {
 
-            //mock setup
+            // mock setup
             LinkedDataProofValidation mock = Mockito.mock(LinkedDataProofValidation.class);
             utils.when(() -> {
                 LinkedDataProofValidation.newInstance(Mockito.any(SignatureType.class), Mockito.any(DidResolver.class));
@@ -271,21 +272,20 @@ class HoldersCredentialTest {
         }
     }
 
-
     @Test
     @DisplayName("validate expired VC with date check true, it should return false")
     void validateExpiredCredentialsWithExpiryCheckTrue() throws com.fasterxml.jackson.core.JsonProcessingException {
 
-        //data setup
+        // data setup
         Map<String, Object> map = issueVC();
-        //modify expiry date
+        // modify expiry date
         Instant instant = Instant.now().minusSeconds(60);
         map.put("expirationDate", instant.toString());
 
-        //service call
+        // service call
         try (MockedStatic<LinkedDataProofValidation> utils = Mockito.mockStatic(LinkedDataProofValidation.class)) {
 
-            //mock setup
+            // mock setup
             LinkedDataProofValidation mock = Mockito.mock(LinkedDataProofValidation.class);
             utils.when(() -> {
                 LinkedDataProofValidation.newInstance(Mockito.any(SignatureType.class), Mockito.any(DidResolver.class));
@@ -294,52 +294,53 @@ class HoldersCredentialTest {
 
             Map<String, Object> stringObjectMap = credentialController.credentialsValidation(map, true).getBody();
             Assertions.assertFalse(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALID).toString()));
-            Assertions.assertFalse(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
+            Assertions
+                    .assertFalse(Boolean.parseBoolean(stringObjectMap.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
 
         }
     }
-
 
     private Map<String, Object> issueVC() throws JsonProcessingException {
         String bpn = TestUtils.randomBpn();
         String baseBpn = miwSettings.authorityWalletBpn().value();
         TestUtils.createWallet(bpn, "Test", restTemplate, baseBpn);
-        ResponseEntity<String> vc = TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn().value());
-        VerifiableCredential verifiableCredential = new VerifiableCredential(new ObjectMapper().readValue(vc.getBody(), Map.class));
+        ResponseEntity<String> vc = TestUtils.issueMembershipVC(restTemplate, bpn,
+                miwSettings.authorityWalletBpn().value());
+        VerifiableCredential verifiableCredential = new VerifiableCredential(
+                new ObjectMapper().readValue(vc.getBody(), Map.class));
         Map<String, Object> map = objectMapper.readValue(verifiableCredential.toJson(), Map.class);
         return map;
     }
 
-
-    private ResponseEntity<String> issueVC(String bpn, String did, String type, HttpHeaders headers) throws JsonProcessingException {
+    private ResponseEntity<String> issueVC(String bpn, String did, String type, HttpHeaders headers)
+            throws JsonProcessingException {
         String baseBpn = miwSettings.authorityWalletBpn().value();
-        //save wallet
+        // save wallet
         TestUtils.createWallet(bpn, did, restTemplate, baseBpn);
 
         // Create VC without proof
-        //VC Bulider
-        VerifiableCredentialBuilder verifiableCredentialBuilder =
-                new VerifiableCredentialBuilder();
+        // VC Bulider
+        VerifiableCredentialBuilder verifiableCredentialBuilder = new VerifiableCredentialBuilder();
 
-        //VC Subject
-        VerifiableCredentialSubject verifiableCredentialSubject =
-                new VerifiableCredentialSubject(Map.of("test", "test"));
+        // VC Subject
+        VerifiableCredentialSubject verifiableCredentialSubject = new VerifiableCredentialSubject(
+                Map.of("test", "test"));
 
-        //Using Builder
-        VerifiableCredential credentialWithoutProof =
-                verifiableCredentialBuilder
-                        .id(URI.create(did + "#" + UUID.randomUUID()))
-                        .context(miwSettings.vcContexts())
-                        .type(List.of(VerifiableCredentialType.VERIFIABLE_CREDENTIAL, type))
-                        .issuer(URI.create(did)) //issuer must be base wallet
-                        .expirationDate(miwSettings.vcExpiryDate().toInstant())
-                        .issuanceDate(Instant.now())
-                        .credentialSubject(verifiableCredentialSubject)
-                        .build();
+        // Using Builder
+        VerifiableCredential credentialWithoutProof = verifiableCredentialBuilder
+                .id(URI.create(did + "#" + UUID.randomUUID()))
+                .context(miwSettings.vcContexts())
+                .type(List.of(VerifiableCredentialType.VERIFIABLE_CREDENTIAL, type))
+                .issuer(URI.create(did)) // issuer must be base wallet
+                .expirationDate(miwSettings.vcExpiryDate().toInstant())
+                .issuanceDate(Instant.now())
+                .credentialSubject(verifiableCredentialSubject)
+                .build();
 
         Map<String, Objects> map = objectMapper.readValue(credentialWithoutProof.toJson(), Map.class);
         HttpEntity<Map> entity = new HttpEntity<>(map, headers);
-        ResponseEntity<String> response = restTemplate.exchange(RestURI.CREDENTIALS, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(RestURI.CREDENTIALS, HttpMethod.POST, entity,
+                String.class);
         return response;
     }
 }

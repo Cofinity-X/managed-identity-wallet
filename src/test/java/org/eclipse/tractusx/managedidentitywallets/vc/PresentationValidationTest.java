@@ -41,6 +41,7 @@ import org.eclipse.tractusx.managedidentitywallets.service.IssuersCredentialServ
 import org.eclipse.tractusx.managedidentitywallets.service.PresentationService;
 import org.eclipse.tractusx.managedidentitywallets.service.WalletService;
 import org.eclipse.tractusx.managedidentitywallets.utils.AuthenticationUtils;
+import org.eclipse.tractusx.managedidentitywallets.utils.TestUtils;
 import org.eclipse.tractusx.ssi.lib.model.did.Did;
 import org.eclipse.tractusx.ssi.lib.model.did.DidParser;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
@@ -69,8 +70,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {ManagedIdentityWalletsApplication.class})
-@ContextConfiguration(initializers = {TestContextInitializer.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
+        ManagedIdentityWalletsApplication.class })
+@ContextConfiguration(initializers = { TestContextInitializer.class })
 class PresentationValidationTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -91,11 +93,11 @@ class PresentationValidationTest {
     @Autowired
     private MIWSettings miwSettings;
 
-    private final String bpnTenant_1 = UUID.randomUUID().toString();
+    private final String bpnTenant_1 = TestUtils.randomBpn();
 
-    private final String bpnTenant_2 = UUID.randomUUID().toString();
+    private final String bpnTenant_2 = TestUtils.randomBpn();
 
-    private String bpnOperator;
+    private BPN bpnOperator;
 
     private Did tenant_1;
 
@@ -107,45 +109,41 @@ class PresentationValidationTest {
 
     @BeforeEach
     public void setup() {
-        bpnOperator = miwSettings.authorityWalletBpn().value();
+        bpnOperator = miwSettings.authorityWalletBpn();
 
         CreateWalletRequest createWalletRequest = new CreateWalletRequest();
         createWalletRequest.setBpn(bpnTenant_1);
         createWalletRequest.setName("My Test Tenant Wallet");
-        Wallet tenantWallet = walletService.createWallet(createWalletRequest, new BPN(bpnOperator));
+        Wallet tenantWallet = walletService.createWallet(createWalletRequest, bpnOperator);
         tenant_1 = DidParser.parse(tenantWallet.getDid());
 
         CreateWalletRequest createWalletRequest2 = new CreateWalletRequest();
         createWalletRequest2.setBpn(bpnTenant_2);
         createWalletRequest2.setName("My Test Tenant Wallet");
-        Wallet tenantWallet2 = walletService.createWallet(createWalletRequest2, new BPN(bpnOperator));
+        Wallet tenantWallet2 = walletService.createWallet(createWalletRequest2, bpnOperator);
         tenant_2 = DidParser.parse(tenantWallet2.getDid());
 
         membershipCredential_1 = issuersCredentialService.issueMembershipCredential(
                 new IssueMembershipCredentialCommand(
                         new BPN(bpnTenant_1),
-                        new BPN(bpnOperator)
-                )
-        );
+                        (bpnOperator)));
 
         membershipCredential_2 = issuersCredentialService.issueMembershipCredential(
                 new IssueMembershipCredentialCommand(
                         new BPN(bpnTenant_2),
-                        new BPN(bpnOperator)
-                )
-        );
+                        (bpnOperator)));
     }
 
     @AfterEach
     public void cleanUp() {
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_1, false, new BPN(bpnOperator));
+            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_1, false, bpnOperator);
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore
         }
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_2, false, new BPN(bpnOperator));
+            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_2, false, bpnOperator);
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore
@@ -164,12 +162,11 @@ class PresentationValidationTest {
     public void testSuccessfulValidationForMultipleVC() {
         final Map<String, Object> creationResponse = createPresentationJwt(List.of(
                 membershipCredential_1,
-                membershipCredential_2
-        ), tenant_1);
+                membershipCredential_2), tenant_1);
         // get the payload of the json web token
         final String encodedJwtPayload = ((String) creationResponse.get("vp")).split("\\.")[1];
         Map<String, Object> decodedJwtPayload = OBJECT_MAPPER.readValue(Base64.getUrlDecoder()
-                                                                              .decode(encodedJwtPayload), Map.class);
+                .decode(encodedJwtPayload), Map.class);
         VerifiablePresentation presentation = new VerifiablePresentation((Map) decodedJwtPayload.get("vp"));
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(creationResponse);
 
@@ -190,7 +187,6 @@ class PresentationValidationTest {
         Assertions.assertFalse(response.valid);
     }
 
-
     @Test
     public void testValidationFailureOfCredentialWitInvalidExpirationDateInSecondCredential() {
         // test is related to this old issue where the signature check still succeeded
@@ -200,8 +196,7 @@ class PresentationValidationTest {
         copyCredential.put(VerifiableCredential.EXPIRATION_DATE, "2500-09-30T22:00:00Z");
         final Map<String, Object> presentation = createPresentationJwt(
                 List.of(membershipCredential_1, copyCredential),
-                tenant_1
-        );
+                tenant_1);
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(presentation);
         Assertions.assertFalse(response.valid);
     }
@@ -233,17 +228,14 @@ class PresentationValidationTest {
         String newJwt = jwt.split("\\.")[0] + "." + newPayloadEncoded + "." + jwt.split("\\.")[2];
 
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(Map.of(
-                StringPool.VP, newJwt
-        ));
+                StringPool.VP, newJwt));
         Assertions.assertNotEquals(jwt, newJwt);
         Assertions.assertFalse(
                 response.valid,
                 String.format(
                         "The validation should fail because the vp is manipulated.\nOriginal JWT: %s\nNew JWT: %s",
                         jwt,
-                        newJwt
-                )
-        );
+                        newJwt));
     }
 
     @SneakyThrows
@@ -256,8 +248,7 @@ class PresentationValidationTest {
                 RestURI.API_PRESENTATIONS_VALIDATION + "?asJwt=true",
                 HttpMethod.POST,
                 entity,
-                String.class
-        );
+                String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
             return OBJECT_MAPPER.readValue(response.getBody(), VerifiablePresentationValidationResponse.class);
@@ -266,23 +257,19 @@ class PresentationValidationTest {
         throw new RuntimeException(String.format(
                 "JWT:\n%s\nResponse: %s",
                 SerializeUtil.toPrettyJson(presentationJwt),
-                OBJECT_MAPPER.writeValueAsString(response)
-        ));
+                OBJECT_MAPPER.writeValueAsString(response)));
     }
 
     private Map<String, Object> createPresentationJwt(List<VerifiableCredential> verifiableCredential, Did issuer) {
         return presentationService.createPresentation(Map.of(StringPool.VERIFIABLE_CREDENTIALS, verifiableCredential),
-                                                      true, issuer.toString(), issuer.toString()
-        );
+                true, issuer.toString(), issuer.toString());
     }
 
     private Map<String, Object> createPresentationJwt(VerifiableCredential verifiableCredential, Did issuer) {
         return presentationService.createPresentation(Map.of(
-                                                              StringPool.VERIFIABLE_CREDENTIALS,
-                                                              List.of(verifiableCredential)
-                                                      ),
-                                                      true, issuer.toString(), issuer.toString()
-        );
+                StringPool.VERIFIABLE_CREDENTIALS,
+                List.of(verifiableCredential)),
+                true, issuer.toString(), issuer.toString());
     }
 
     @Getter

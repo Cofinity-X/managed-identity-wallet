@@ -57,7 +57,6 @@ public class StringPool {
 
     public static final String ED_25519 = "ED25519";
 
-
     /**
      * The constant DID.
      */
@@ -73,7 +72,6 @@ public class StringPool {
     public static final String ID = "id";
 
     public static final String ITEMS = "items";
-
 
     public static final String CLIENT_ID = "miw_private_client";
 

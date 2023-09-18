@@ -62,8 +62,9 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {ManagedIdentityWalletsApplication.class})
-@ContextConfiguration(initializers = {TestContextInitializer.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
+        ManagedIdentityWalletsApplication.class })
+@ContextConfiguration(initializers = { TestContextInitializer.class })
 class PresentationTest {
 
     @Autowired
@@ -81,23 +82,22 @@ class PresentationTest {
     @Autowired
     private MIWSettings miwSettings;
 
-
     @Test
     void validateVPAssJsonLd400() throws JsonProcessingException {
-        //create VP
+        // create VP
         String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
 
-        //validate VP
+        // validate VP
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(bpn);
         HttpEntity<Map> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> validationResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS_VALIDATION, HttpMethod.POST, entity, Map.class);
+        ResponseEntity<Map> validationResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS_VALIDATION,
+                HttpMethod.POST, entity, Map.class);
         Assertions.assertEquals(validationResponse.getStatusCode().value(), HttpStatus.BAD_REQUEST.value());
     }
-
 
     @Test
     void validateVPAsJwt() throws JsonProcessingException {
@@ -106,7 +106,8 @@ class PresentationTest {
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
 
-        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body, null, true, false);
+        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body, null,
+                true, false);
 
         Map map = mapResponseEntity.getBody();
         Assertions.assertTrue(Boolean.parseBoolean(map.get(StringPool.VALID).toString()));
@@ -117,8 +118,9 @@ class PresentationTest {
     }
 
     @Test
-    void validateVPAsJwtWithInvalidSignatureAndInValidAudienceAndExpiryDateValidation() throws JsonProcessingException, DidDocumentResolverNotRegisteredException, JwtException, InterruptedException {
-        //create VP
+    void validateVPAsJwtWithInvalidSignatureAndInValidAudienceAndExpiryDateValidation() throws JsonProcessingException,
+            DidDocumentResolverNotRegisteredException, JwtException, InterruptedException {
+        // create VP
         String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
@@ -133,7 +135,8 @@ class PresentationTest {
 
             Thread.sleep(62000L); // need to remove this??? Can not mock 2 object creation using new
 
-            ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body, "no valid", true, true);
+            ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body,
+                    "no valid", true, true);
 
             Map map = mapResponseEntity.getBody();
 
@@ -147,13 +150,14 @@ class PresentationTest {
 
     @Test
     void validateVPAsJwtWithValidAudienceAndDateValidation() throws JsonProcessingException {
-        //create VP
+        // create VP
         String bpn = TestUtils.randomBpn();
         String audience = "companyA";
         ResponseEntity<Map> vpResponse = createBpnVCAsJwt(bpn, audience);
         Map body = vpResponse.getBody();
 
-        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body, audience, true, true);
+        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body,
+                audience, true, true);
 
         Map map = mapResponseEntity.getBody();
         Assertions.assertTrue(Boolean.parseBoolean(map.get(StringPool.VALID).toString()));
@@ -164,14 +168,15 @@ class PresentationTest {
 
     @Test
     void validateVPAsJwtWithInValidVCDateValidation() throws JsonProcessingException {
-        //create VP
+        // create VP
         String bpn = TestUtils.randomBpn();
         String audience = "companyA";
 
         ResponseEntity<Map> vpResponse = getIssueVPRequestWithShortExpiry(bpn, audience);
         Map body = vpResponse.getBody();
 
-        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body, audience, true, true);
+        ResponseEntity<Map<String, Object>> mapResponseEntity = presentationController.validatePresentation(body,
+                audience, true, true);
 
         Map map = mapResponseEntity.getBody();
         Assertions.assertFalse(Boolean.parseBoolean(map.get(StringPool.VALID).toString()));
@@ -192,7 +197,7 @@ class PresentationTest {
         JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
         String iss = claimsSet.getStringClaim("iss");
 
-        //issuer of VP is must be holder of VP
+        // issuer of VP is must be holder of VP
         Assertions.assertEquals(iss, did);
     }
 
@@ -204,10 +209,11 @@ class PresentationTest {
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
-        ResponseEntity<Map> vpResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class, true, audience);
+        ResponseEntity<Map> vpResponse = restTemplate.exchange(
+                RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class,
+                true, audience);
         return vpResponse;
     }
-
 
     @Test
     void createPresentationAsJsonLD201() throws JsonProcessingException {
@@ -222,7 +228,8 @@ class PresentationTest {
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
-        ResponseEntity<Map> vpResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS, HttpMethod.POST, entity, Map.class);
+        ResponseEntity<Map> vpResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS, HttpMethod.POST, entity,
+                Map.class);
         Assertions.assertEquals(vpResponse.getStatusCode().value(), HttpStatus.CREATED.value());
 
     }
@@ -234,12 +241,14 @@ class PresentationTest {
 
         Map<String, Object> request = getIssueVPRequest(bpn);
 
-        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders("invalid bpn");
+        HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(TestUtils.randomBpn());
         headers.put(HttpHeaders.CONTENT_TYPE, List.of(MediaType.APPLICATION_JSON_VALUE));
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
-        ResponseEntity<Map> vpResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class, true, "companyA");
+        ResponseEntity<Map> vpResponse = restTemplate.exchange(
+                RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class,
+                true, "companyA");
         Assertions.assertEquals(vpResponse.getStatusCode().value(), HttpStatus.NOT_FOUND.value());
     }
 
@@ -250,12 +259,13 @@ class PresentationTest {
         Assertions.assertEquals(response.getStatusCode().value(), HttpStatus.CREATED.value());
         Wallet wallet = TestUtils.getWalletFromString(response.getBody());
 
-        //get BPN credentials
-        List<HoldersCredential> credentials = holdersCredentialRepository.getByHolderDidAndType(wallet.getDid(), MIWVerifiableCredentialType.BPN_CREDENTIAL);
+        // get BPN credentials
+        List<HoldersCredential> credentials = holdersCredentialRepository.getByHolderDidAndType(wallet.getDid(),
+                MIWVerifiableCredentialType.BPN_CREDENTIAL);
 
         Map<String, Object> map = objectMapper.readValue(credentials.get(0).getData().toJson(), Map.class);
 
-        //create request
+        // create request
         Map<String, Object> request = new HashMap<>();
         request.put(StringPool.HOLDER_IDENTIFIER, wallet.getDid());
         request.put(StringPool.VERIFIABLE_CREDENTIALS, List.of(map));
@@ -263,22 +273,23 @@ class PresentationTest {
     }
 
     @NotNull
-    private ResponseEntity<Map> getIssueVPRequestWithShortExpiry(String bpn, String audience) throws JsonProcessingException {
+    private ResponseEntity<Map> getIssueVPRequestWithShortExpiry(String bpn, String audience)
+            throws JsonProcessingException {
         String baseBpn = miwSettings.authorityWalletBpn().value();
         ResponseEntity<String> response = TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn);
         Assertions.assertEquals(response.getStatusCode().value(), HttpStatus.CREATED.value());
         Wallet wallet = TestUtils.getWalletFromString(response.getBody());
 
-        //create VC
+        // create VC
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
         String type = VerifiableCredentialType.MEMBERSHIP_CREDENTIAL;
         Instant vcExpiry = Instant.now().minusSeconds(60);
-        ResponseEntity<String> vcResponse = issueVC(wallet.getBpn(), wallet.getDid(), miwSettings.authorityWalletDid(), type, headers, miwSettings.vcContexts(), vcExpiry);
-
+        ResponseEntity<String> vcResponse = issueVC(wallet.getBpn(), wallet.getDid(), miwSettings.authorityWalletDid(),
+                type, headers, miwSettings.vcContexts(), vcExpiry);
 
         Map<String, Object> map = objectMapper.readValue(vcResponse.getBody(), Map.class);
 
-        //create request
+        // create request
         Map<String, Object> request = new HashMap<>();
         request.put(StringPool.HOLDER_IDENTIFIER, wallet.getDid());
         request.put(StringPool.VERIFIABLE_CREDENTIALS, List.of(map));
@@ -288,35 +299,38 @@ class PresentationTest {
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
-        ResponseEntity<Map> vpResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class, true, audience);
+        ResponseEntity<Map> vpResponse = restTemplate.exchange(
+                RestURI.API_PRESENTATIONS + "?asJwt={asJwt}&audience={audience}", HttpMethod.POST, entity, Map.class,
+                true, audience);
         return vpResponse;
     }
 
-    private ResponseEntity<String> issueVC(String bpn, String holderDid, String issuerDid, String type, HttpHeaders headers, List<URI> contexts, Instant expiry) throws JsonProcessingException {
+    private ResponseEntity<String> issueVC(String bpn, String holderDid, String issuerDid, String type,
+            HttpHeaders headers, List<URI> contexts, Instant expiry) throws JsonProcessingException {
         // Create VC without proof
-        //VC Bulider
-        VerifiableCredentialBuilder verifiableCredentialBuilder =
-                new VerifiableCredentialBuilder();
+        // VC Bulider
+        VerifiableCredentialBuilder verifiableCredentialBuilder = new VerifiableCredentialBuilder();
 
-        //VC Subject
-        VerifiableCredentialSubject verifiableCredentialSubject = new VerifiableCredentialSubject(Map.of(StringPool.TYPE, MIWVerifiableCredentialType.BPN_CREDENTIAL,
-                StringPool.ID, holderDid,
-                StringPool.BPN, bpn));
+        // VC Subject
+        VerifiableCredentialSubject verifiableCredentialSubject = new VerifiableCredentialSubject(
+                Map.of(StringPool.TYPE, MIWVerifiableCredentialType.BPN_CREDENTIAL,
+                        StringPool.ID, holderDid,
+                        StringPool.BPN, bpn));
 
-        //Using Builder
-        VerifiableCredential credentialWithoutProof =
-                verifiableCredentialBuilder
-                        .id(URI.create(issuerDid + "#" + UUID.randomUUID()))
-                        .context(contexts)
-                        .type(List.of(VerifiableCredentialType.VERIFIABLE_CREDENTIAL, type))
-                        .issuer(URI.create(issuerDid)) //issuer must be base wallet
-                        .expirationDate(expiry)
-                        .issuanceDate(Instant.now())
-                        .credentialSubject(verifiableCredentialSubject)
-                        .build();
+        // Using Builder
+        VerifiableCredential credentialWithoutProof = verifiableCredentialBuilder
+                .id(URI.create(issuerDid + "#" + UUID.randomUUID()))
+                .context(contexts)
+                .type(List.of(VerifiableCredentialType.VERIFIABLE_CREDENTIAL, type))
+                .issuer(URI.create(issuerDid)) // issuer must be base wallet
+                .expirationDate(expiry)
+                .issuanceDate(Instant.now())
+                .credentialSubject(verifiableCredentialSubject)
+                .build();
 
         Map<String, Objects> map = objectMapper.readValue(credentialWithoutProof.toJson(), Map.class);
         HttpEntity<Map> entity = new HttpEntity<>(map, headers);
-        return restTemplate.exchange(RestURI.ISSUERS_CREDENTIALS + "?holderDid={did}", HttpMethod.POST, entity, String.class, holderDid);
+        return restTemplate.exchange(RestURI.ISSUERS_CREDENTIALS + "?holderDid={did}", HttpMethod.POST, entity,
+                String.class, holderDid);
     }
 }
