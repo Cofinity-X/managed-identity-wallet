@@ -148,32 +148,4 @@ public class SecurityConfig {
                         new CustomAuthenticationConverter(securityConfigProperties.clientId()))));
         return http.build();
     }
-
-    /**
-     * Security customizer web security customizer.
-     *
-     * @return the web security customizer
-     */
-    @Bean
-    @ConditionalOnProperty(value = "miw.security.enabled", havingValue = "false")
-    public WebSecurityCustomizer securityCustomizer() {
-        log.warn("Disable security : This is not recommended to use in production environments.");
-        return web -> web.ignoring().requestMatchers(new AntPathRequestMatcher("**"));
-    }
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3004")); // changes as per your port and host
-                                                                                 // name
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(
-                List.of("X-Requested-With", "X-HTTP-Method-Override", "Content-Type", "Authorization", "Accept",
-                        "Access-Control-Allow-Credentials", "Access-Control-Allow-Origin"));
-        configuration.setAllowCredentials(true);
-        // configuration.addAllowedHeader("Authorization");
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
 }
