@@ -21,6 +21,7 @@
 
 package org.eclipse.tractusx.managedidentitywallets.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
@@ -35,6 +36,7 @@ import java.util.TreeMap;
 /**
  * The type Base controller.
  */
+@Slf4j
 public class BaseController {
 
     /**
@@ -44,6 +46,7 @@ public class BaseController {
      * @return the bpn from token
      */
     public BPN getBPNFromToken(Principal principal) {
+        System.out.println("extracting BPN from principal");
         Object principal1 = ((JwtAuthenticationToken) principal).getPrincipal();
         Jwt jwt = (Jwt) principal1;
 
@@ -53,6 +56,7 @@ public class BaseController {
         claims.putAll(jwt.getClaims());
         Validate.isFalse(claims.containsKey(StringPool.BPN))
                 .launch(new ForbiddenException("Invalid token, BPN not found"));
+
         return new BPN(claims.get(StringPool.BPN).toString());
     }
 }

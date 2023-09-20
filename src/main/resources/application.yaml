@@ -1,3 +1,6 @@
+debug: true
+
+
 server:
   port: ${APPLICATION_PORT:8087}
   shutdown: graceful
@@ -64,7 +67,11 @@ management:
 # log level
 logging:
   level:
+    web: DEBUG
     org:
+      springframework:
+        security:
+          oauth2: DEBUG
       eclipse:
         tractusx:
           managedidentitywallets: ${APP_LOG_LEVEL:INFO}

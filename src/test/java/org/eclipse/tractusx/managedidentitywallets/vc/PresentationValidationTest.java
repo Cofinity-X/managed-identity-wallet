@@ -71,8 +71,8 @@ import java.util.Map;
 import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
-        ManagedIdentityWalletsApplication.class })
-@ContextConfiguration(initializers = { TestContextInitializer.class })
+        ManagedIdentityWalletsApplication.class})
+@ContextConfiguration(initializers = {TestContextInitializer.class})
 class PresentationValidationTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -126,12 +126,14 @@ class PresentationValidationTest {
         membershipCredential_1 = issuersCredentialService.issueMembershipCredential(
                 new IssueMembershipCredentialCommand(
                         new BPN(bpnTenant_1),
-                        (bpnOperator)));
+                        (bpnOperator)
+                ));
 
         membershipCredential_2 = issuersCredentialService.issueMembershipCredential(
                 new IssueMembershipCredentialCommand(
                         new BPN(bpnTenant_2),
-                        (bpnOperator)));
+                        (bpnOperator)
+                ));
     }
 
     @AfterEach
@@ -152,7 +154,7 @@ class PresentationValidationTest {
 
     @Test
     void testSuccessfulValidation() {
-        Map<String, Object> presentation = createPresentationJwt(membershipCredential_1, tenant_1);
+        Map<String, Object> presentation = createPresentationJwt(membershipCredential_1, tenant_1, bpnTenant_1);
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(presentation);
         Assertions.assertTrue(response.valid);
     }
@@ -162,11 +164,12 @@ class PresentationValidationTest {
     public void testSuccessfulValidationForMultipleVC() {
         final Map<String, Object> creationResponse = createPresentationJwt(List.of(
                 membershipCredential_1,
-                membershipCredential_2), tenant_1);
+                membershipCredential_2
+        ), tenant_1, bpnTenant_1);
         // get the payload of the json web token
         final String encodedJwtPayload = ((String) creationResponse.get("vp")).split("\\.")[1];
         Map<String, Object> decodedJwtPayload = OBJECT_MAPPER.readValue(Base64.getUrlDecoder()
-                .decode(encodedJwtPayload), Map.class);
+                                                                              .decode(encodedJwtPayload), Map.class);
         VerifiablePresentation presentation = new VerifiablePresentation((Map) decodedJwtPayload.get("vp"));
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(creationResponse);
 
@@ -182,7 +185,7 @@ class PresentationValidationTest {
         VerifiableCredential copyCredential = new VerifiableCredential(membershipCredential_1);
         // e.g. an attacker tries to extend the validity of a verifiable credential
         copyCredential.put(VerifiableCredential.EXPIRATION_DATE, "2500-09-30T22:00:00Z");
-        Map<String, Object> presentation = createPresentationJwt(copyCredential, tenant_1);
+        Map<String, Object> presentation = createPresentationJwt(copyCredential, tenant_1, bpnTenant_1);
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(presentation);
         Assertions.assertFalse(response.valid);
     }
@@ -195,8 +198,9 @@ class PresentationValidationTest {
         // e.g. an attacker tries to extend the validity of a verifiable credential
         copyCredential.put(VerifiableCredential.EXPIRATION_DATE, "2500-09-30T22:00:00Z");
         final Map<String, Object> presentation = createPresentationJwt(
-                List.of(membershipCredential_1, copyCredential),
-                tenant_1);
+                List.of(membershipCredential_1, copyCredential), tenant_1,
+                bpnTenant_1
+        );
         VerifiablePresentationValidationResponse response = validateJwtOfCredential(presentation);
         Assertions.assertFalse(response.valid);
     }
@@ -204,7 +208,7 @@ class PresentationValidationTest {
     @Test
     @SneakyThrows
     void testValidationFailureOfPresentationPayloadManipulation() {
-        Map<String, Object> presentation = createPresentationJwt(membershipCredential_1, tenant_1);
+        Map<String, Object> presentation = createPresentationJwt(membershipCredential_1, tenant_1, bpnTenant_1);
 
         String jwt = (String) presentation.get(StringPool.VP);
         String payload = jwt.split("\\.")[1];
@@ -235,7 +239,9 @@ class PresentationValidationTest {
                 String.format(
                         "The validation should fail because the vp is manipulated.\nOriginal JWT: %s\nNew JWT: %s",
                         jwt,
-                        newJwt));
+                        newJwt
+                )
+        );
     }
 
     @SneakyThrows
@@ -248,7 +254,8 @@ class PresentationValidationTest {
                 RestURI.API_PRESENTATIONS_VALIDATION + "?asJwt=true",
                 HttpMethod.POST,
                 entity,
-                String.class);
+                String.class
+        );
 
         if (response.getStatusCode().is2xxSuccessful()) {
             return OBJECT_MAPPER.readValue(response.getBody(), VerifiablePresentationValidationResponse.class);
@@ -257,19 +264,31 @@ class PresentationValidationTest {
         throw new RuntimeException(String.format(
                 "JWT:\n%s\nResponse: %s",
                 SerializeUtil.toPrettyJson(presentationJwt),
-                OBJECT_MAPPER.writeValueAsString(response)));
+                OBJECT_MAPPER.writeValueAsString(response)
+        ));
     }
 
-    private Map<String, Object> createPresentationJwt(List<VerifiableCredential> verifiableCredential, Did issuer) {
+    private Map<String, Object> createPresentationJwt(
+            List<VerifiableCredential> verifiableCredential,
+            Did issuer,
+            String caller
+    ) {
         return presentationService.createPresentation(Map.of(StringPool.VERIFIABLE_CREDENTIALS, verifiableCredential),
-                true, issuer.toString(), issuer.toString());
+                                                      true, issuer.toString(), caller
+        );
     }
 
-    private Map<String, Object> createPresentationJwt(VerifiableCredential verifiableCredential, Did issuer) {
+    private Map<String, Object> createPresentationJwt(
+            VerifiableCredential verifiableCredential,
+            Did issuer,
+            String caller
+    ) {
         return presentationService.createPresentation(Map.of(
-                StringPool.VERIFIABLE_CREDENTIALS,
-                List.of(verifiableCredential)),
-                true, issuer.toString(), issuer.toString());
+                                                              StringPool.VERIFIABLE_CREDENTIALS,
+                                                              List.of(verifiableCredential)
+                                                      ),
+                                                      true, issuer.toString(), caller
+        );
     }
 
     @Getter
