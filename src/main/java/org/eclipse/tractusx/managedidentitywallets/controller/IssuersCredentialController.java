@@ -183,13 +183,19 @@ public class IssuersCredentialController extends BaseController {
      * @param withCredentialExpiryDate the with credential expiry date
      * @return the response entity
      */
+    // FIXME data should be a real dto, that can be valdiated
     @PostMapping(path = RestURI.CREDENTIALS_VALIDATION, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ValidateVerifiableCredentialApiDocs
     public ResponseEntity<Map<String, Object>> credentialsValidation(
             @RequestBody Map<String, Object> data,
-            boolean withCredentialExpiryDate) {
+            @RequestParam(name = "withCredentialExpiryDate", defaultValue = "false", required = false) boolean withCredentialExpiryDate) {
+
+        VerifiableCredential verifiableCredential = new VerifiableCredential(data);
+
+        // TODO validate further if necessary, never pass arbitrary input into domain
+
         return ResponseEntity.status(HttpStatus.OK)
-                .body(issuersCredentialService.credentialsValidation(data, withCredentialExpiryDate));
+                .body(issuersCredentialService.credentialsValidation(verifiableCredential, withCredentialExpiryDate));
     }
 
     /**

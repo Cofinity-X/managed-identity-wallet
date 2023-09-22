@@ -37,6 +37,7 @@ import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSear
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
 import org.eclipse.tractusx.managedidentitywallets.service.HoldersCredentialService;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -73,7 +74,7 @@ public class HoldersCredentialController extends BaseController {
     @GetMapping(path = RestURI.CREDENTIALS, produces = MediaType.APPLICATION_JSON_VALUE)
     @GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
-            HolderVerifiableCredentialSearch credentialSearch,
+            @ParameterObject HolderVerifiableCredentialSearch credentialSearch,
             final Principal principal) {
 
         CredentialSearchCommand.Builder searchBuilder = CredentialSearchCommand.builder();

@@ -97,11 +97,16 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
         filterRequest.setSize(credentialSearchCommand.pageSize());
 
         // Holder must be caller of API
-        Wallet holderWallet = commonService.getWalletByBPN(credentialSearchCommand.callerBpn());
+        Wallet holderWallet = commonService.getWalletByBPN(credentialSearchCommand.callerBpn().value());
         filterRequest.appendCriteria(StringPool.HOLDER_DID, Operator.EQUALS, holderWallet.getDid());
 
         Optional.ofNullable(credentialSearchCommand.identifier()).ifPresent(o -> {
-            Wallet issuerWallet = commonService.getWalletByDid(o);
+            Wallet issuerWallet;
+            if(o.isDid()) {
+                issuerWallet = commonService.getWalletByDid(o.value());
+            }else{
+                issuerWallet = commonService.getWalletByBPN(o.value());
+            }
             filterRequest.appendCriteria(StringPool.ISSUER_DID, Operator.EQUALS, issuerWallet.getDid());
         });
 
@@ -140,7 +145,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
      * @return the verifiable credential
      */
     public VerifiableCredential issueCredential(VerifiableCredential verifiableCredential, String callerBpn) {
-        Wallet issuerWallet = commonService.getWalletByDid(new Identifier(verifiableCredential.getIssuer().toString()));
+        Wallet issuerWallet = commonService.getWalletByDid(verifiableCredential.getIssuer().toString());
 
         // validate BPN access, Holder must be caller of API
         Validate.isFalse(callerBpn.equals(issuerWallet.getBpn()))

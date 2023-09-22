@@ -110,9 +110,9 @@ public class WalletService extends BaseService<Wallet, Long> {
         Wallet wallet;
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
         if (commonService.checkIfDid(didOrBpn)) {
-            wallet = commonService.getWalletByDid(new Identifier(didOrBpn));
+            wallet = commonService.getWalletByDid(didOrBpn);
         } else {
-            wallet = commonService.getWalletByBPN(new BPN(didOrBpn));
+            wallet = commonService.getWalletByBPN(didOrBpn);
         }
         // validate BPN access
         Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
@@ -151,9 +151,9 @@ public class WalletService extends BaseService<Wallet, Long> {
     public Wallet getWalletByIdentifier(String didOrBpn, boolean withCredentials, BPN callerBpn) {
         Wallet wallet;
         if (commonService.checkIfDid(didOrBpn)) {
-            wallet = commonService.getWalletByDid(new Identifier(didOrBpn));
+            wallet = commonService.getWalletByDid(didOrBpn);
         } else {
-            wallet = commonService.getWalletByBPN(new BPN(didOrBpn));
+            wallet = commonService.getWalletByBPN(didOrBpn);
         }
         // authority wallet can see all wallets
         if (!miwSettings.authorityWalletBpn().value().equals(callerBpn.value())) {

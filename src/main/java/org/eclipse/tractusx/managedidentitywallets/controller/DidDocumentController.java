@@ -29,6 +29,7 @@ import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentController
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.GetDidResolveApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.service.DidDocumentService;
 import org.eclipse.tractusx.ssi.lib.model.did.DidDocument;
 import org.springframework.http.HttpStatus;
@@ -54,12 +55,15 @@ public class DidDocumentController {
      * @param identifier the identifier
      * @return the did document
      */
+    /*
+        FIXME identifier is allowed to be a did or a bpn, otherwise illegal argument is thrown,  this should expect a 400 instead of a 500 in the test DidDocumentsTest.getDidDocumentInvalidBpn500()
+     */
 
     @GetMapping(path = RestURI.DID_DOCUMENTS, produces = MediaType.APPLICATION_JSON_VALUE)
     @GetDidDocumentApiDocs
     public ResponseEntity<DidDocument> getDidDocument(
             @DidOrBpnParameterDoc @PathVariable(name = "identifier") String didOrBpn) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(didOrBpn));
+        return ResponseEntity.status(HttpStatus.OK).body(service.getDidDocument(new Identifier(didOrBpn)));
     }
 
     /**

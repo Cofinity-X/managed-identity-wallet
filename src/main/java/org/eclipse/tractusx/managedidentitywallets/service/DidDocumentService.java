@@ -45,11 +45,11 @@ public class DidDocumentService {
      * @param identifier the identifier
      * @return the did document
      */
-    public DidDocument getDidDocument(String didOrBpn) {
-        if (commonService.checkIfDid(didOrBpn)) {
-            return commonService.getWalletByDid(new Identifier(didOrBpn)).getDidDocument();
+    public DidDocument getDidDocument(Identifier didOrBpn) {
+        if (didOrBpn.isDid()) {
+            return commonService.getWalletByDid(didOrBpn.value()).getDidDocument();
         } else {
-            return commonService.getWalletByBPN(new BPN(didOrBpn)).getDidDocument();
+            return commonService.getWalletByBPN(didOrBpn.value()).getDidDocument();
         }
     }
 
@@ -59,6 +59,6 @@ public class DidDocumentService {
      * @param bpn
      */
     public DidDocument getDidDocumentByBPN(BPN bpn) {
-        return commonService.getWalletByBPN(bpn).getDidDocument();
+        return commonService.getWalletByBPN(bpn.value()).getDidDocument();
     }
 }

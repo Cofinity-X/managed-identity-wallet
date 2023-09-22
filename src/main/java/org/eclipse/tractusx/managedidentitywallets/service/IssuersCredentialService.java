@@ -154,11 +154,16 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         filterRequest.setPage(credentialSearchCommand.pageNumber());
 
         // Issuer must be caller of API
-        Wallet issuerWallet = commonService.getWalletByBPN(credentialSearchCommand.callerBpn());
+        Wallet issuerWallet = commonService.getWalletByBPN(credentialSearchCommand.callerBpn().value());
         filterRequest.appendCriteria(StringPool.ISSUER_DID, Operator.EQUALS, issuerWallet.getDid());
 
         Optional.ofNullable(credentialSearchCommand.identifier()).ifPresent(o -> {
-            Wallet holderWallet = commonService.getWalletByDid(o);
+            Wallet holderWallet;
+            if(o.isDid()) {
+                holderWallet = commonService.getWalletByDid(o.value());
+            }else{
+                holderWallet = commonService.getWalletByBPN(o.value());
+            }
             filterRequest.appendCriteria(StringPool.HOLDER_DID, Operator.EQUALS, holderWallet.getDid());
         });
 
@@ -258,9 +263,9 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                         miwSettings.supportedFrameworkVCTypes()));
 
         // Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByBPN(new BPN(request.getHolderIdentifier()));
+        Wallet holderWallet = commonService.getWalletByBPN(request.getHolderIdentifier());
 
-        Wallet baseWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
+        Wallet baseWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn().value());
 
         validateAccess(callerBPN, baseWallet);
         // get Key
@@ -323,10 +328,10 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     public VerifiableCredential issueDismantlerCredential(IssueDismantlerCredentialCommand cmd) {
 
         // Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn());
+        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn().value());
 
         // Fetch Issuer Wallet
-        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
+        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn().value());
 
         validateAccess(cmd.caller(), issuerWallet);
 
@@ -396,13 +401,13 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             IssueMembershipCredentialCommand cmd) {
 
         // Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn());
+        Wallet holderWallet = commonService.getWalletByBPN(cmd.bpn().value());
 
         // check duplicate
         isCredentialExit(holderWallet.getDid(), VerifiableCredentialType.MEMBERSHIP_CREDENTIAL);
 
         // Fetch Issuer Wallet
-        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn());
+        Wallet issuerWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn().value());
 
         validateAccess(cmd.caller(), issuerWallet);
 
@@ -479,9 +484,9 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
             BPN callerBPN) {
         Wallet holderWallet;
         if (commonService.checkIfDid(holderDid)) {
-            holderWallet = commonService.getWalletByDid(new Identifier(holderDid));
+            holderWallet = commonService.getWalletByDid(holderDid);
         } else {
-            holderWallet = commonService.getWalletByBPN(new BPN(holderDid));
+            holderWallet = commonService.getWalletByBPN(holderDid);
         }
 
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
@@ -493,7 +498,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                                 MIWVerifiableCredentialType.SUMMARY_CREDENTIAL +
                                 " type VC using API")));
 
-        Wallet issuerWallet = commonService.getWalletByDid(new Identifier(verifiableCredential.getIssuer().toString()));
+        Wallet issuerWallet = commonService.getWalletByDid(verifiableCredential.getIssuer().toString());
 
         validateAccess(callerBPN, issuerWallet);
 
@@ -538,8 +543,8 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
      * @return the map
      */
     @SneakyThrows
-    public Map<String, Object> credentialsValidation(Map<String, Object> data, boolean withCredentialExpiryDate) {
-        VerifiableCredential verifiableCredential = new VerifiableCredential(data);
+    public Map<String, Object> credentialsValidation(VerifiableCredential verifiableCredential, boolean withCredentialExpiryDate) {
+
 
         DidResolver didResolver = new DidWebResolver(
                 HttpClient.newHttpClient(),

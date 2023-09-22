@@ -28,22 +28,37 @@ import java.util.regex.Pattern;
  * Identifier is a unique identifier for a wallet.
  */
 public class Identifier {
-    private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPN[ALS][0-9a-f]{12}$";
+    private static final String PATTERN_DID = "^did:web:([a-z0-9\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPN[ALS][0-9a-f]{12}$";
+
+    private static final String PATTERN_BPN = "^BPN[ALS][0-9a-f]{12}$";
 
     private final String value;
 
+    private final boolean isDid;
+
     public Identifier(final String identifier) {
 
-        Pattern pattern = Pattern.compile(PATTERN);
-        Matcher matcher = pattern.matcher(identifier);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("identifier %s is not valid".formatted(identifier));
+        Pattern didPattern = Pattern.compile(PATTERN_DID);
+        Matcher didMatcher = didPattern.matcher(identifier);
+        boolean didMatched = didMatcher.matches();
+
+        if(!didMatched){
+            Pattern bpnPattern = Pattern.compile(PATTERN_BPN);
+            Matcher bpnMatcher = bpnPattern.matcher(identifier);
+            if(!bpnMatcher.matches()){
+                throw new IllegalArgumentException("identifier %s is not valid".formatted(identifier));
+            }
         }
 
+        this.isDid = didMatched;
         this.value = identifier;
     }
 
     public String value() {
         return value;
+    }
+
+    public boolean isDid() {
+        return isDid;
     }
 }

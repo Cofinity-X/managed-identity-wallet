@@ -111,7 +111,7 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
         List<Map<String, Object>> verifiableCredentialList = (List<Map<String, Object>>) data.get(StringPool.VERIFIABLE_CREDENTIALS);
 
         //check if holder wallet is in the system
-        Wallet callerWallet = commonService.getWalletByBPN(new BPN(callerBpn));
+        Wallet callerWallet = commonService.getWalletByBPN(callerBpn);
 
         List<VerifiableCredential> verifiableCredentials = new ArrayList<>(verifiableCredentialList.size());
         verifiableCredentialList.forEach(map -> {
