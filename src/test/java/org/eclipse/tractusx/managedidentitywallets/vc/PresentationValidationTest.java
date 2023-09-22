@@ -34,6 +34,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CreatePresentationCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.WalletNotFoundProblem;
@@ -273,9 +274,15 @@ class PresentationValidationTest {
             Did issuer,
             String caller
     ) {
-        return presentationService.createPresentation(Map.of(StringPool.VERIFIABLE_CREDENTIALS, verifiableCredential),
-                                                      true, issuer.toString(), caller
-        );
+
+        CreatePresentationCommand cmd = CreatePresentationCommand.builder()
+                                                                 .setAsJwt(true)
+                                                                 .setAudience(issuer.toString())
+                                                                 .setVerifiableCredentials(verifiableCredential)
+                                                                 .setCaller(new BPN(caller))
+                                                                 .build();
+
+        return presentationService.createPresentation(cmd);
     }
 
     private Map<String, Object> createPresentationJwt(
@@ -283,12 +290,15 @@ class PresentationValidationTest {
             Did issuer,
             String caller
     ) {
-        return presentationService.createPresentation(Map.of(
-                                                              StringPool.VERIFIABLE_CREDENTIALS,
-                                                              List.of(verifiableCredential)
-                                                      ),
-                                                      true, issuer.toString(), caller
-        );
+
+        CreatePresentationCommand cmd = CreatePresentationCommand.builder()
+                                                                 .setAsJwt(true)
+                                                                 .setAudience(issuer.toString())
+                                                                 .setVerifiableCredentials(List.of(verifiableCredential))
+                                                                 .setCaller(new BPN(caller))
+                                                                 .build();
+
+        return presentationService.createPresentation(cmd);
     }
 
     @Getter

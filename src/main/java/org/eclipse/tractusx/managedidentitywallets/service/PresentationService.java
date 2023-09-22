@@ -34,7 +34,8 @@ import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
-import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CreatePresentationCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.ValidatePresentationCommand;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
 import org.eclipse.tractusx.ssi.lib.crypt.ed25519.Ed25519Key;
@@ -66,7 +67,10 @@ import org.springframework.util.StringUtils;
 
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The type Presentation service.
@@ -107,22 +111,23 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
      * @return the map
      */
     @SneakyThrows({InvalidePrivateKeyFormat.class})
-    public Map<String, Object> createPresentation(Map<String, Object> data, boolean asJwt, String audience, String callerBpn) {
-        List<Map<String, Object>> verifiableCredentialList = (List<Map<String, Object>>) data.get(StringPool.VERIFIABLE_CREDENTIALS);
+    public Map<String, Object> createPresentation(CreatePresentationCommand cmd) {
+        //List<Map<String, Object>> verifiableCredentialList = (List<Map<String, Object>>) data.get(StringPool.VERIFIABLE_CREDENTIALS);
 
         //check if holder wallet is in the system
-        Wallet callerWallet = commonService.getWalletByBPN(callerBpn);
+        Wallet callerWallet = commonService.getWalletByBPN(cmd.caller().value());
 
-        List<VerifiableCredential> verifiableCredentials = new ArrayList<>(verifiableCredentialList.size());
-        verifiableCredentialList.forEach(map -> {
-            VerifiableCredential verifiableCredential = new VerifiableCredential(map);
-            verifiableCredentials.add(verifiableCredential);
-        });
+//        List<VerifiableCredential> verifiableCredentials = new ArrayList<>(verifiableCredentialList.size());
+//        verifiableCredentialList.forEach(map -> {
+//            VerifiableCredential verifiableCredential = new VerifiableCredential(map);
+//            verifiableCredentials.add(verifiableCredential);
+//        });
 
         Map<String, Object> response = new HashMap<>();
-        if (asJwt) {
-            log.debug("Creating VP as JWT for bpn ->{}", callerBpn);
-            Validate.isFalse(StringUtils.hasText(audience)).launch(new BadDataException("Audience needed to create VP as JWT"));
+        if (cmd.asJwt()) {
+            log.debug("Creating VP as JWT for bpn ->{}", cmd.caller().value());
+            Validate.isFalse(StringUtils.hasText(cmd.audience()))
+                    .launch(new BadDataException("Audience needed to create VP as JWT"));
 
             //Issuer of VP is holder of VC
             Did vpIssuerDid = DidParser.parse(callerWallet.getDid());
@@ -135,11 +140,11 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
             Ed25519Key ed25519Key = walletKeyService.getPrivateKeyByWalletIdentifier(callerWallet.getId());
             x21559PrivateKey privateKey = new x21559PrivateKey(ed25519Key.getEncoded());
             SignedJWT presentation = presentationFactory.createPresentation(vpIssuerDid
-                    , verifiableCredentials, audience, privateKey);
+                    , cmd.verifiableCredentials(), cmd.audience(), privateKey);
 
             response.put(StringPool.VP, presentation.serialize());
         } else {
-            log.debug("Creating VP as JSON-LD for bpn ->{}", callerBpn);
+            log.debug("Creating VP as JSON-LD for bpn ->{}", cmd.caller().value());
             VerifiablePresentationBuilder verifiablePresentationBuilder =
                     new VerifiablePresentationBuilder();
 
@@ -148,7 +153,7 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
                     verifiablePresentationBuilder
                             .id(URI.create(miwSettings.authorityWalletDid() + "#" + UUID.randomUUID().toString()))
                             .type(List.of(VerifiablePresentationType.VERIFIABLE_PRESENTATION))
-                            .verifiableCredentials(verifiableCredentials)
+                            .verifiableCredentials(cmd.verifiableCredentials())
                             .build();
             response.put(StringPool.VP, verifiablePresentation);
         }
@@ -166,58 +171,75 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
      * @return the map
      */
     @SneakyThrows
-    public Map<String, Object> validatePresentation(Map<String, Object> vp, boolean asJwt, boolean withCredentialExpiryDate, String audience) {
+    public Map<String, Object> validatePresentation(
+            ValidatePresentationCommand cmd
+            ) {
 
-        Map<String, Object> response = new HashMap<>();
-        if (asJwt) {
-            log.debug("Validating VP as JWT");
-            //verify as jwt
-            Validate.isNull(vp.get(StringPool.VP)).launch(new BadDataException("Can not find JWT"));
-            String jwt = vp.get(StringPool.VP).toString();
-            response.put(StringPool.VP, jwt);
-
-            SignedJWT signedJWT = SignedJWT.parse(jwt);
-
-            boolean validateSignature = validateSignature(signedJWT);
-
-            //validate audience
-            boolean validateAudience = validateAudience(audience, signedJWT);
-
-            //validate jwt date
-            boolean validateJWTExpiryDate = validateJWTExpiryDate(signedJWT);
-            response.put(StringPool.VALIDATE_JWT_EXPIRY_DATE, validateJWTExpiryDate);
-
-            boolean validCredential = true;
-            boolean validateExpiryDate = true;
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> claims = mapper.readValue(signedJWT.getPayload().toBytes(), Map.class);
-                String vpClaim = mapper.writeValueAsString(claims.get("vp"));
-
-                JsonLdSerializerImpl jsonLdSerializer = new JsonLdSerializerImpl();
-                VerifiablePresentation presentation = jsonLdSerializer.deserializePresentation(new SerializedVerifiablePresentation(vpClaim));
-
-                for (VerifiableCredential credential : presentation.getVerifiableCredentials()) {
-                    validateExpiryDate = CommonService.validateExpiry(withCredentialExpiryDate, credential, response);
-                    if (!validateCredential(credential)) {
-                        validCredential = false;
-                    }
-                }
-            } catch (InvalidJsonLdException e) {
-                throw new BadDataException(String.format("Validation of VP in form of JSON-LD is not supported. Invalid Json-LD: %s", e.getMessage()));
-            }
-
-            response.put(StringPool.VALID, (validateSignature && validateAudience && validateExpiryDate && validCredential && validateJWTExpiryDate));
-
-            if (StringUtils.hasText(audience)) {
-                response.put(StringPool.VALIDATE_AUDIENCE, validateAudience);
-
-            }
-
-        } else {
+        // fail fast
+        if (!cmd.asJwt()) {
             log.debug("Validating VP as json-ld");
             throw new BadDataException("Validation of VP in form of JSON-LD is not supported");
         }
+
+
+        Map<String, Object> response = new HashMap<>();
+
+        log.debug("Validating VP as JWT");
+        //verify as jwt
+        //Validate.isNull(vp.get(StringPool.VP)).launch(new BadDataException("Can not find JWT"));
+        //String jwt = vp.get(StringPool.VP).toString();
+        response.put(StringPool.VP, cmd.vpJwt().serialize());
+
+        if(!(cmd.vpJwt() instanceof final SignedJWT signedJWT)){
+            throw new BadDataException("JWT is not signed");
+        }
+
+
+        boolean validateSignature = validateSignature(signedJWT);
+
+        //validate audience
+        boolean validateAudience = validateAudience(cmd.audience(), signedJWT);
+
+        //validate jwt date
+        boolean validateJWTExpiryDate = validateJWTExpiryDate(signedJWT);
+        response.put(StringPool.VALIDATE_JWT_EXPIRY_DATE, validateJWTExpiryDate);
+
+        boolean validCredential = true;
+        boolean validateExpiryDate = true;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+//            Map<String, Object> claims = mapper.readValue(signedJWT.getPayload().toBytes(), Map.class);
+            Map<String, Object> claims = signedJWT.getPayload().toJSONObject();
+            String vpClaim = mapper.writeValueAsString(claims.get("vp"));
+
+            JsonLdSerializerImpl jsonLdSerializer = new JsonLdSerializerImpl();
+            VerifiablePresentation presentation = jsonLdSerializer.deserializePresentation(new SerializedVerifiablePresentation(
+                    vpClaim));
+
+            for (VerifiableCredential credential : presentation.getVerifiableCredentials()) {
+                validateExpiryDate = CommonService.validateExpiry(cmd.withCredentialExpiryDate(), credential, response);
+                if (!validateCredential(credential)) {
+                    validCredential = false;
+                }
+            }
+        } catch (InvalidJsonLdException e) {
+            throw new BadDataException(String.format(
+                    "Validation of VP in form of JSON-LD is not supported. Invalid Json-LD: %s",
+                    e.getMessage()
+            ));
+        }
+
+        response.put(
+                StringPool.VALID,
+                (validateSignature && validateAudience && validateExpiryDate && validCredential &&
+                 validateJWTExpiryDate)
+        );
+
+        if (StringUtils.hasText(cmd.audience())) {
+            response.put(StringPool.VALIDATE_AUDIENCE, validateAudience);
+
+        }
+
 
         return response;
     }
@@ -225,7 +247,11 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
     private boolean validateSignature(SignedJWT signedJWT) {
         //validate jwt signature
         try {
-            DidResolver didResolver = new DidWebResolver(HttpClient.newHttpClient(), new DidWebParser(), miwSettings.enforceHttps());
+            DidResolver didResolver = new DidWebResolver(
+                    HttpClient.newHttpClient(),
+                    new DidWebParser(),
+                    miwSettings.enforceHttps()
+            );
 
             SignedJwtVerifier jwtVerifier = new SignedJwtVerifier(didResolver);
             return jwtVerifier.verify(signedJWT);
@@ -263,7 +289,11 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
 
     @SneakyThrows
     private boolean validateCredential(VerifiableCredential credential) {
-        DidResolver didResolver = new DidWebResolver(HttpClient.newHttpClient(), new DidWebParser(), miwSettings.enforceHttps());
+        DidResolver didResolver = new DidWebResolver(
+                HttpClient.newHttpClient(),
+                new DidWebParser(),
+                miwSettings.enforceHttps()
+        );
 
         String proofType = credential.getProof().getType();
         LinkedDataProofValidation linkedDataProofValidation;

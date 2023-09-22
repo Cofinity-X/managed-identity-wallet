@@ -24,6 +24,7 @@ package org.eclipse.tractusx.managedidentitywallets.controller;
 import com.smartsensesolutions.java.commons.sort.SortType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.GetCredentialsApiDocs;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueDismantlerCredentialApiDoc;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.IssuersCredentialControllerApiDocs.IssueFrameworkCredentialApiDocs;
@@ -39,6 +40,7 @@ import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueFrameworkCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueDismantlerCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
@@ -67,6 +69,7 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class IssuersCredentialController extends BaseController {
 
     private final IssuersCredentialService issuersCredentialService;
@@ -74,8 +77,7 @@ public class IssuersCredentialController extends BaseController {
     /**
      * Gets credentials.
      *
-     * @param credentialSearch object holding all query parameters including default
-     *                         values
+     * @param credentialSearch object holding all query parameters including default values
      * @param principal        the principal
      * @return the credentials
      */
@@ -83,7 +85,8 @@ public class IssuersCredentialController extends BaseController {
     @GetCredentialsApiDocs
     public ResponseEntity<PageImpl<VerifiableCredential>> getCredentials(
             IssuerVerifiableCredentialSearch credentialSearch,
-            Principal principal) {
+            Principal principal
+    ) {
 
         CredentialSearchCommand.Builder searchBuilder = CredentialSearchCommand.builder();
         Optional.ofNullable(credentialSearch.getCredentialId())
@@ -97,22 +100,22 @@ public class IssuersCredentialController extends BaseController {
                 });
 
         searchBuilder.withSort(
-                SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
-                SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
-                .withPageNumber(credentialSearch.getPageNumber())
-                .withPageSize(credentialSearch.getSize())
-                .withCallerBpn(getBPNFromToken(principal));
+                             SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                             SortType.valueOf(credentialSearch.getSortType().toUpperCase())
+                     )
+                     .withPageNumber(credentialSearch.getPageNumber())
+                     .withPageSize(credentialSearch.getSize())
+                     .withCallerBpn(getBPNFromToken(principal));
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(issuersCredentialService.getCredentials(
-                        searchBuilder.build()));
+                             .body(issuersCredentialService.getCredentials(
+                                     searchBuilder.build()));
     }
 
     /**
      * Issue membership credential response entity.
      *
-     * @param issueMembershipCredentialRequest the issue membership credential
-     *                                         request
+     * @param issueMembershipCredentialRequest the issue membership credential request
      * @param principal                        the principal
      * @return the response entity
      */
@@ -169,11 +172,30 @@ public class IssuersCredentialController extends BaseController {
     @IssueFrameworkCredentialApiDocs
     public ResponseEntity<VerifiableCredential> issueFrameworkCredential(
             @Valid @RequestBody IssueFrameworkCredentialRequest request,
-            Principal principal) {
+            Principal principal
+    ) {
+
+        IssueFrameworkCredentialCommand cmd;
+        try {
+            cmd = IssueFrameworkCredentialCommand.builder()
+                                                 .setContractTemplate(request.getContractTemplate())
+                                                 .setContractVersion(request.getContractVersion())
+                                                 .setHolderIdentifier(new BPN(request.getHolderIdentifier()))
+                                                 .setType(
+                                                         IssueFrameworkCredentialCommand.FrameworkCredentialType.valueOfType(
+                                                                 request.getType())
+
+                                                 )
+                                                 .setCaller(getBPNFromToken(principal))
+                                                 .build();
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(issuersCredentialService.issueFrameworkCredential(
-                        request,
-                        getBPNFromToken(principal)));
+                             .body(issuersCredentialService.issueFrameworkCredential(cmd));
     }
 
     /**
@@ -188,14 +210,18 @@ public class IssuersCredentialController extends BaseController {
     @ValidateVerifiableCredentialApiDocs
     public ResponseEntity<Map<String, Object>> credentialsValidation(
             @RequestBody Map<String, Object> data,
-            @RequestParam(name = "withCredentialExpiryDate", defaultValue = "false", required = false) boolean withCredentialExpiryDate) {
+            @RequestParam(name = "withCredentialExpiryDate", defaultValue = "false", required = false) boolean withCredentialExpiryDate
+    ) {
 
         VerifiableCredential verifiableCredential = new VerifiableCredential(data);
 
         // TODO validate further if necessary, never pass arbitrary input into domain
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(issuersCredentialService.credentialsValidation(verifiableCredential, withCredentialExpiryDate));
+                             .body(issuersCredentialService.credentialsValidation(
+                                     verifiableCredential,
+                                     withCredentialExpiryDate
+                             ));
     }
 
     /**
@@ -211,11 +237,13 @@ public class IssuersCredentialController extends BaseController {
     public ResponseEntity<VerifiableCredential> issueCredentialUsingBaseWallet(
             @RequestParam(name = "holderDid") String holderDid,
             @RequestBody Map<String, Object> data,
-            Principal principal) {
+            Principal principal
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(issuersCredentialService.issueCredentialUsingBaseWallet(
-                        holderDid,
-                        data,
-                        getBPNFromToken(principal)));
+                             .body(issuersCredentialService.issueCredentialUsingBaseWallet(
+                                     holderDid,
+                                     data,
+                                     getBPNFromToken(principal)
+                             ));
     }
 }

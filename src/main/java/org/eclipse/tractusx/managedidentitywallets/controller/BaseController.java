@@ -46,7 +46,6 @@ public class BaseController {
      * @return the bpn from token
      */
     public BPN getBPNFromToken(Principal principal) {
-        System.out.println("extracting BPN from principal");
         Object principal1 = ((JwtAuthenticationToken) principal).getPrincipal();
         Jwt jwt = (Jwt) principal1;
 

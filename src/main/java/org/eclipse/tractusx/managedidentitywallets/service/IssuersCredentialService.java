@@ -46,6 +46,7 @@ import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueFrameworkCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
@@ -254,20 +255,20 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public VerifiableCredential issueFrameworkCredential(IssueFrameworkCredentialRequest request, BPN callerBPN) {
+    public VerifiableCredential issueFrameworkCredential(IssueFrameworkCredentialCommand cmd) {
 
         // validate type
-        Validate.isFalse(miwSettings.supportedFrameworkVCTypes().contains(request.getType()))
-                .launch(new BadDataException("Framework credential of type " + request.getType() +
+        Validate.isFalse(miwSettings.supportedFrameworkVCTypes().contains(cmd.type().value))
+                .launch(new BadDataException("Framework credential of type " + cmd.type().value +
                         " is not supported, supported values are " +
                         miwSettings.supportedFrameworkVCTypes()));
 
         // Fetch Holder Wallet
-        Wallet holderWallet = commonService.getWalletByBPN(request.getHolderIdentifier());
+        Wallet holderWallet = commonService.getWalletByBPN(cmd.holderIdentifier().value());
 
         Wallet baseWallet = commonService.getWalletByBPN(miwSettings.authorityWalletBpn().value());
 
-        validateAccess(callerBPN, baseWallet);
+        validateAccess(cmd.caller(), baseWallet);
         // get Key
         byte[] privateKeyBytes = walletKeyService.getPrivateKeyByWalletIdentifierAsBytes(baseWallet.getId());
 
@@ -275,11 +276,11 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
         boolean isSelfIssued = isSelfIssued(holderWallet.getBpn());
 
         VerifiableCredentialSubject subject = new VerifiableCredentialSubject(Map.of(
-                StringPool.TYPE, request.getType(),
+                StringPool.TYPE, cmd.type().value,
                 StringPool.ID, holderWallet.getDid(),
                 StringPool.HOLDER_IDENTIFIER, holderWallet.getBpn(),
-                StringPool.CONTRACT_TEMPLATE, request.getContractTemplate(),
-                StringPool.CONTRACT_VERSION, request.getContractVersion()));
+                StringPool.CONTRACT_TEMPLATE, cmd.contractTemplate(),
+                StringPool.CONTRACT_VERSION, cmd.contractVersion()));
         List<String> types = List.of(
                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
                 MIWVerifiableCredentialType.USE_CASE_FRAMEWORK_CONDITION);
@@ -307,11 +308,11 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
                 baseWallet.getDid(),
                 holderWallet.getBpn(),
                 holderWallet.getDid(),
-                request.getType());
+                cmd.type().value);
 
         log.debug(
                 "Framework VC of type ->{} issued to bpn ->{}",
-                StringEscapeUtils.escapeJava(request.getType()),
+                StringEscapeUtils.escapeJava(cmd.type().value),
                 StringEscapeUtils.escapeJava(holderWallet.getBpn()));
 
         // Return VC

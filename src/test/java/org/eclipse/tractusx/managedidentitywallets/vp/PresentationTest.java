@@ -96,7 +96,7 @@ class PresentationTest {
 
         ResponseEntity<Map> validationResponse = restTemplate.exchange(RestURI.API_PRESENTATIONS_VALIDATION,
                 HttpMethod.POST, entity, Map.class);
-        Assertions.assertEquals(validationResponse.getStatusCode().value(), HttpStatus.BAD_REQUEST.value());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST.value(),validationResponse.getStatusCode().value());
     }
 
     @Test
@@ -179,6 +179,10 @@ class PresentationTest {
                 audience, true, true);
 
         Map map = mapResponseEntity.getBody();
+
+//        System.out.println("expiry-date: "+Boolean.parseBoolean(map.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
+//        System.out.println("valid: "+Boolean.parseBoolean(map.get(StringPool.VALID).toString()));
+
         Assertions.assertFalse(Boolean.parseBoolean(map.get(StringPool.VALID).toString()));
         Assertions.assertTrue(Boolean.parseBoolean(map.get(StringPool.VALIDATE_AUDIENCE).toString()));
         Assertions.assertFalse(Boolean.parseBoolean(map.get(StringPool.VALIDATE_EXPIRY_DATE).toString()));
@@ -283,7 +287,7 @@ class PresentationTest {
         // create VC
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
         String type = VerifiableCredentialType.MEMBERSHIP_CREDENTIAL;
-        Instant vcExpiry = Instant.now().minusSeconds(60);
+        Instant vcExpiry = Instant.now().minusSeconds(600);
         ResponseEntity<String> vcResponse = issueVC(wallet.getBpn(), wallet.getDid(), miwSettings.authorityWalletDid(),
                 type, headers, miwSettings.vcContexts(), vcExpiry);
 
