@@ -287,7 +287,7 @@ class PresentationTest {
         // create VC
         HttpHeaders headers = AuthenticationUtils.getValidUserHttpHeaders(miwSettings.authorityWalletBpn().value());
         String type = VerifiableCredentialType.MEMBERSHIP_CREDENTIAL;
-        Instant vcExpiry = Instant.now().minusSeconds(600);
+        Instant vcExpiry = Instant.now().minusSeconds(60);
         ResponseEntity<String> vcResponse = issueVC(wallet.getBpn(), wallet.getDid(), miwSettings.authorityWalletDid(),
                 type, headers, miwSettings.vcContexts(), vcExpiry);
 
