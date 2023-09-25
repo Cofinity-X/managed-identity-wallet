@@ -41,7 +41,9 @@ import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletReposito
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.WalletAggregate;
-import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CreateWalletCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.GetWalletCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.StoreCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
 import org.eclipse.tractusx.managedidentitywallets.exception.DuplicateWalletProblem;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
@@ -106,38 +108,39 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn  the caller bpn
      * @return the map
      */
-    public Map<String, String> storeCredential(Map<String, Object> data, String didOrBpn, BPN callerBpn) {
+    public Map<String, String> storeCredential(StoreCredentialCommand cmd) {
         Wallet wallet;
-        VerifiableCredential verifiableCredential = new VerifiableCredential(data);
-        if (commonService.checkIfDid(didOrBpn)) {
-            wallet = commonService.getWalletByDid(didOrBpn);
+
+        if (commonService.checkIfDid(cmd.identifier().value())) {
+            wallet = commonService.getWalletByDid(cmd.identifier().value());
         } else {
-            wallet = commonService.getWalletByBPN(didOrBpn);
+            wallet = commonService.getWalletByBPN(cmd.identifier().value());
         }
         // validate BPN access
-        Validate.isFalse(callerBpn.value().equalsIgnoreCase(wallet.getBpn()))
+        Validate.isFalse(cmd.caller().value().equalsIgnoreCase(wallet.getBpn()))
                 .launch(new ForbiddenException("Wallet BPN is not matching with request BPN(from the token)"));
 
         // check type
-        Validate.isTrue(verifiableCredential.getTypes().isEmpty())
+        Validate.isTrue(cmd.verifiableCredential().getTypes().isEmpty())
                 .launch(new BadDataException("Invalid types provided in credentials"));
 
-        List<String> cloneTypes = new ArrayList<>(verifiableCredential.getTypes());
+        List<String> cloneTypes = new ArrayList<>(cmd.verifiableCredential().getTypes());
         cloneTypes.remove(VerifiableCredentialType.VERIFIABLE_CREDENTIAL);
 
         holdersCredentialRepository.save(HoldersCredential.builder()
-                .holderDid(wallet.getDid())
-                .issuerDid(verifiableCredential.getIssuer().toString())
-                .type(String.join(",", cloneTypes))
-                .data(verifiableCredential)
-                .selfIssued(false)
-                .stored(true) // credential is stored(not issued by MIW)
-                .credentialId(verifiableCredential.getId().toString())
-                .build());
-        log.debug("VC type of {} stored for bpn ->{} with id-{}", cloneTypes, callerBpn, verifiableCredential.getId());
+                                                          .holderDid(wallet.getDid())
+                                                          .issuerDid(cmd.verifiableCredential().getIssuer().toString())
+                                                          .type(String.join(",", cloneTypes))
+                                                          .data(cmd.verifiableCredential())
+                                                          .selfIssued(false)
+                                                          .stored(true) // credential is stored(not issued by MIW)
+                                                          .credentialId(cmd.verifiableCredential().getId().toString())
+                                                          .build());
+        log.debug("VC type of {} stored for bpn ->{} with id-{}", cloneTypes, cmd.caller(), cmd.verifiableCredential().getId());
         return Map.of(
                 "message",
-                String.format("Credential with id %s has been successfully stored", verifiableCredential.getId()));
+                String.format("Credential with id %s has been successfully stored", cmd.verifiableCredential().getId())
+        );
     }
 
     /**
@@ -148,12 +151,12 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param callerBpn       the caller bpn
      * @return the wallet by identifier
      */
-    public Wallet getWalletByIdentifier(String didOrBpn, boolean withCredentials, BPN callerBpn) {
+    public Wallet getWalletByIdentifier(Identifier didOrBpn, boolean withCredentials, BPN callerBpn) {
         Wallet wallet;
-        if (commonService.checkIfDid(didOrBpn)) {
-            wallet = commonService.getWalletByDid(didOrBpn);
+        if (commonService.checkIfDid(didOrBpn.value())) {
+            wallet = commonService.getWalletByDid(didOrBpn.value());
         } else {
-            wallet = commonService.getWalletByBPN(didOrBpn);
+            wallet = commonService.getWalletByBPN(didOrBpn.value());
         }
         // authority wallet can see all wallets
         if (!miwSettings.authorityWalletBpn().value().equals(callerBpn.value())) {
@@ -177,14 +180,14 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @param sortType   the sort type
      * @return the wallets
      */
-    public Page<Wallet> getWallets(int pageNumber, int size, String sortColumn, String sortType) {
+    public Page<Wallet> getWallets(GetWalletCommand cmd) {
         FilterRequest filterRequest = new FilterRequest();
-        filterRequest.setSize(size);
-        filterRequest.setPage(pageNumber);
+        filterRequest.setSize(cmd.size());
+        filterRequest.setPage(cmd.pageNumber());
 
         Sort sort = new Sort();
-        sort.setColumn(sortColumn);
-        sort.setSortType(SortType.valueOf(sortType.toUpperCase()));
+        sort.setColumn(cmd.sortColumn().value);
+        sort.setSortType(SortType.valueOf(cmd.sortType().getValue().toUpperCase()));
         filterRequest.setSort(sort);
         return filter(filterRequest);
     }
@@ -196,8 +199,8 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
-    public Wallet createWallet(CreateWalletRequest request, BPN callerBpn) {
-        return createWallet(request, false, callerBpn);
+    public Wallet createWallet(CreateWalletCommand cmd) {
+        return createWallet(cmd.bpn(), cmd.name(), false, cmd.caller());
     }
 
     /**
@@ -208,40 +211,41 @@ public class WalletService extends BaseService<Wallet, Long> {
      */
     @SneakyThrows
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    private Wallet createWallet(CreateWalletRequest request, boolean authority, BPN callerBpn) {
-        validateCreateWallet(request, callerBpn);
+    private Wallet createWallet(BPN bpn, String name, boolean authority, BPN callerBpn) {
+        validateCreateWallet(bpn, callerBpn);
 
         WalletAggregate walletAggregate = WalletAggregate.builder()
-                .withBpn(new BPN(request.getBpn()))
-                .withHost(miwSettings.host())
-                .withContextUrls(miwSettings.didDocumentContextUrls())
-                .build();
+                                                         .withBpn(bpn)
+                                                         .withHost(miwSettings.host())
+                                                         .withContextUrls(miwSettings.didDocumentContextUrls())
+                                                         .build();
 
-        log.debug("did document created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
+        log.debug("did document created for bpn ->{}", StringEscapeUtils.escapeJava(bpn.value()));
         String encryptedPrivateKey = walletAggregate.getEncryptedPrivateKey(encryptionUtils);
         String encryptedPublicKey = walletAggregate.getEncryptedPublicKey(encryptionUtils);
 
+        // FIXME this suddenly throws a DataIntegrityViolationException
         // Save wallet
         Wallet wallet = create(Wallet.builder()
-                .didDocument(walletAggregate.getDocument())
-                .bpn(request.getBpn())
-                .name(request.getName())
-                .did(walletAggregate.getDid().toUri().toString())
-                .algorithm(StringPool.ED_25519)
-                .build());
+                                     .didDocument(walletAggregate.getDocument())
+                                     .bpn(bpn.value())
+                                     .name(name)
+                                     .did(walletAggregate.getDid().toUri().toString())
+                                     .algorithm(StringPool.ED_25519)
+                                     .build());
 
         // Save key
         walletKeyService.getRepository().save(WalletKey.builder()
-                .walletId(wallet.getId())
-                .keyId(walletAggregate.getKeyId())
-                .referenceKey("dummy ref key, removed once vault setup is ready")
-                .vaultAccessToken(
-                        "dummy vault access token, removed once vault setup is ready")
-                .privateKey(encryptedPrivateKey)
-                .publicKey(encryptedPublicKey)
-                .build());
+                                                       .walletId(wallet.getId())
+                                                       .keyId(walletAggregate.getKeyId())
+                                                       .referenceKey("dummy ref key, removed once vault setup is ready")
+                                                       .vaultAccessToken(
+                                                               "dummy vault access token, removed once vault setup is ready")
+                                                       .privateKey(encryptedPrivateKey)
+                                                       .publicKey(encryptedPublicKey)
+                                                       .build());
 
-        log.debug("Wallet created for bpn ->{}", StringEscapeUtils.escapeJava(request.getBpn()));
+        log.debug("Wallet created for bpn ->{}", StringEscapeUtils.escapeJava(bpn.value()));
 
         Wallet issuerWallet = walletRepository.getByBpn(miwSettings.authorityWalletBpn().value());
 
@@ -259,31 +263,34 @@ public class WalletService extends BaseService<Wallet, Long> {
     public void createAuthorityWallet() {
 
         if (!walletRepository.existsByBpn(miwSettings.authorityWalletBpn().value())) {
-            CreateWalletRequest request = CreateWalletRequest.builder()
-                    .name(miwSettings.authorityWalletName())
-                    .bpn(miwSettings.authorityWalletBpn().value())
-                    .build();
-            createWallet(request, true, new BPN(miwSettings.authorityWalletBpn().value()));
+            createWallet(
+                    miwSettings.authorityWalletBpn(),
+                    miwSettings.authorityWalletName(),
+                    true,
+                    miwSettings.authorityWalletBpn()
+            );
             log.info(
                     "Authority wallet created with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value()));
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value())
+            );
         } else {
             log.info(
                     "Authority wallet exists with bpn {}",
-                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value()));
+                    StringEscapeUtils.escapeJava(miwSettings.authorityWalletBpn().value())
+            );
         }
 
     }
 
-    private void validateCreateWallet(CreateWalletRequest request, BPN callerBpn) {
+    private void validateCreateWallet(BPN bpn, BPN callerBpn) {
         // check base wallet
         Validate.isFalse(callerBpn.value().equalsIgnoreCase(miwSettings.authorityWalletBpn().value()))
                 .launch(new ForbiddenException(BASE_WALLET_BPN_IS_NOT_MATCHING_WITH_REQUEST_BPN_FROM_TOKEN));
 
         // check wallet already exists
-        boolean exist = walletRepository.existsByBpn(request.getBpn());
+        boolean exist = walletRepository.existsByBpn(bpn.value());
         if (exist) {
-            throw new DuplicateWalletProblem("Wallet is already exists for bpn " + request.getBpn());
+            throw new DuplicateWalletProblem("Wallet is already exists for bpn " + bpn.value());
         }
     }
 }

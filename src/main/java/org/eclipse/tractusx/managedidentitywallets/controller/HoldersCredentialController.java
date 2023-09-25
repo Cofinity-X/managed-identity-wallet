@@ -31,7 +31,7 @@ import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
-import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.HolderVerifiableCredentialSearch;
@@ -89,7 +89,8 @@ public class HoldersCredentialController extends BaseController {
                 });
 
         searchBuilder
-                .withSort(SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                .withSort(
+                        CredentialSortColumn.valueOfColumn(credentialSearch.getSortColumn()),
                         SortType.valueOf(credentialSearch.getSortType().toUpperCase()))
                 .withPageNumber(credentialSearch.getPageNumber())
                 .withPageSize(credentialSearch.getSize())

@@ -26,7 +26,8 @@ import org.eclipse.tractusx.managedidentitywallets.config.MIWSettings;
 import org.eclipse.tractusx.managedidentitywallets.config.TestContextInitializer;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
-import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
+import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CreateWalletCommand;
 import org.eclipse.tractusx.managedidentitywallets.service.WalletService;
 import org.eclipse.tractusx.managedidentitywallets.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -41,12 +42,13 @@ import org.springframework.test.context.ContextConfiguration;
 import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {
-        ManagedIdentityWalletsApplication.class })
-@ContextConfiguration(initializers = { TestContextInitializer.class })
+        ManagedIdentityWalletsApplication.class})
+@ContextConfiguration(initializers = {TestContextInitializer.class})
 class DidDocumentsTest {
 
     @Autowired
     private WalletService walletService;
+
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -56,14 +58,16 @@ class DidDocumentsTest {
     @Test
     void getDidDocumentInvalidBpn404() {
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class,
-                TestUtils.randomBpn());
+                                                                    TestUtils.randomBpn()
+        );
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
     }
 
     @Test
     void getDidDocumentInvalidBpn500() {
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class,
-                UUID.randomUUID().toString());
+                                                                    UUID.randomUUID().toString()
+        );
         Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
     }
 
@@ -81,7 +85,8 @@ class DidDocumentsTest {
     @Test
     void getDidResolveInvalidBpn404() {
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_RESOLVE, String.class,
-                TestUtils.randomBpn().toString());
+                                                                    TestUtils.randomBpn().toString()
+        );
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
     }
 
@@ -97,9 +102,9 @@ class DidDocumentsTest {
     }
 
     private Wallet createWallet(String bpn) {
-        CreateWalletRequest createWalletRequest = new CreateWalletRequest();
-        createWalletRequest.setBpn(bpn);
-        createWalletRequest.setName("wallet_" + bpn);
-        return walletService.createWallet(createWalletRequest, miwSettings.authorityWalletBpn());
+        CreateWalletCommand cmd = new CreateWalletCommand("wallet_" + bpn,
+                                                          new BPN(bpn),
+                                                          miwSettings.authorityWalletBpn());
+        return walletService.createWallet(cmd);
     }
 }

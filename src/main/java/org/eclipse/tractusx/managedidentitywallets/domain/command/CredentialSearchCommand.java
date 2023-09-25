@@ -26,7 +26,7 @@ import com.smartsensesolutions.java.commons.sort.SortType;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
-import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 
 import java.util.List;
@@ -131,7 +131,7 @@ public class CredentialSearchCommand {
             return this;
         }
 
-        public Builder withSort(final SortColumn sortColumn, final SortType sortType) {
+        public Builder withSort(final CredentialSortColumn sortColumn, final SortType sortType) {
             Objects.requireNonNull(sortColumn);
             Objects.requireNonNull(sortType);
             this.sort = new Sort();

@@ -34,7 +34,9 @@ import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
+import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CreatePresentationCommand;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CreateWalletCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.WalletNotFoundProblem;
@@ -115,13 +117,21 @@ class PresentationValidationTest {
         CreateWalletRequest createWalletRequest = new CreateWalletRequest();
         createWalletRequest.setBpn(bpnTenant_1);
         createWalletRequest.setName("My Test Tenant Wallet");
-        Wallet tenantWallet = walletService.createWallet(createWalletRequest, bpnOperator);
+        Wallet tenantWallet = walletService.createWallet(new CreateWalletCommand(
+                "My Test Tenant Wallet",
+                new BPN(bpnTenant_1),
+                bpnOperator
+        ));
         tenant_1 = DidParser.parse(tenantWallet.getDid());
 
         CreateWalletRequest createWalletRequest2 = new CreateWalletRequest();
         createWalletRequest2.setBpn(bpnTenant_2);
         createWalletRequest2.setName("My Test Tenant Wallet");
-        Wallet tenantWallet2 = walletService.createWallet(createWalletRequest2, bpnOperator);
+        Wallet tenantWallet2 = walletService.createWallet(new CreateWalletCommand(
+                "My Test Tenant Wallet",
+                new BPN(bpnTenant_2),
+                bpnOperator
+        ));
         tenant_2 = DidParser.parse(tenantWallet2.getDid());
 
         membershipCredential_1 = issuersCredentialService.issueMembershipCredential(
@@ -140,13 +150,13 @@ class PresentationValidationTest {
     @AfterEach
     public void cleanUp() {
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_1, false, bpnOperator);
+            Wallet tenantWallet = walletService.getWalletByIdentifier(new Identifier(bpnTenant_1), false, bpnOperator);
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore
         }
         try {
-            Wallet tenantWallet = walletService.getWalletByIdentifier(bpnTenant_2, false, bpnOperator);
+            Wallet tenantWallet = walletService.getWalletByIdentifier(new Identifier(bpnTenant_2), false, bpnOperator);
             walletService.delete(tenantWallet.getId());
         } catch (WalletNotFoundProblem e) {
             // ignore

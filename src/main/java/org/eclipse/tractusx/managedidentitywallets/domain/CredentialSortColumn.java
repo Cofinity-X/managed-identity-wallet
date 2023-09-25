@@ -21,7 +21,7 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
-public enum SortColumn {
+public enum CredentialSortColumn {
 
     CREATED_AT("createdAt"),
     ISSUER_DID("issuerDid"),
@@ -36,12 +36,12 @@ public enum SortColumn {
 
     public final String value;
 
-    SortColumn(final String value) {
+    CredentialSortColumn(final String value) {
         this.value = value;
     }
 
-    public static SortColumn valueOfColumn(String label) {
-        for (SortColumn e : values()) {
+    public static CredentialSortColumn valueOfColumn(String label) {
+        for (CredentialSortColumn e : values()) {
             if (e.value.equals(label)) {
                 return e;
             }

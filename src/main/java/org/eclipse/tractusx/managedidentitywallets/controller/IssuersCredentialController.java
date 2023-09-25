@@ -36,7 +36,7 @@ import org.eclipse.tractusx.managedidentitywallets.domain.ActivityType;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.CredentialId;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
-import org.eclipse.tractusx.managedidentitywallets.domain.SortColumn;
+import org.eclipse.tractusx.managedidentitywallets.domain.CredentialSortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
@@ -100,7 +100,7 @@ public class IssuersCredentialController extends BaseController {
                 });
 
         searchBuilder.withSort(
-                             SortColumn.valueOfColumn(credentialSearch.getSortColumn()),
+                             CredentialSortColumn.valueOfColumn(credentialSearch.getSortColumn()),
                              SortType.valueOf(credentialSearch.getSortType().toUpperCase())
                      )
                      .withPageNumber(credentialSearch.getPageNumber())
