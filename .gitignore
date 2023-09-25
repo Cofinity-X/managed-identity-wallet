@@ -65,5 +65,6 @@ dev-assets/env-files/env.docker
 dev-assets/env-files/env.environment
 dev-assets/docker-environment/postgres/db.sh
 
+.env
 .java-version
 
