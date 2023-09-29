@@ -34,10 +34,8 @@ import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.HoldersCredential;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
-import org.eclipse.tractusx.managedidentitywallets.exception.CredentialNotFoundProblem;
+import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
 import org.eclipse.tractusx.managedidentitywallets.utils.CommonUtils;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
@@ -140,7 +138,7 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
     /**
      * Issue credential verifiable credential.
      *
-     * @param data      the data
+     * @param verifiableCredential the data of the VC that is being issued
      * @param callerBpn the caller bpn
      * @return the verifiable credential
      */
@@ -177,8 +175,4 @@ public class HoldersCredentialService extends BaseService<HoldersCredential, Lon
         return credential.getData();
     }
 
-    private void isCredentialExistWithId(String holderDid, String credentialId) {
-        Validate.isFalse(holdersCredentialRepository.existsByHolderDidAndCredentialId(holderDid, credentialId))
-                .launch(new CredentialNotFoundProblem("Credential ID: " + credentialId + " is not exists "));
-    }
 }

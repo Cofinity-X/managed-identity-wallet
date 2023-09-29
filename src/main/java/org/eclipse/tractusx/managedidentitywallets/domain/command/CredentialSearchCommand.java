@@ -154,8 +154,8 @@ public class CredentialSearchCommand {
             return this;
         }
 
-        public Builder withCallerBpn(BPN BPN) {
-            this.callerBpn = BPN;
+        public Builder withCallerBpn(BPN bpn) {
+            this.callerBpn = bpn;
             return this;
         }
 

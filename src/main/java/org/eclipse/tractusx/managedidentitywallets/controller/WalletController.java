@@ -26,21 +26,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.tractusx.managedidentitywallets.apidocs.DidDocumentControllerApiDocs.DidOrBpnParameterDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.CreateWalletApiDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.PageNumberParameterDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.RetrieveWalletApiDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.RetrieveWalletsApiDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SizeParameterDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SortColumnParameterDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.SortTypeParameterDoc;
-import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.StoreVerifiableCredentialApiDoc;
+import org.eclipse.tractusx.managedidentitywallets.apidocs.WalletControllerApiDocs.*;
 import org.eclipse.tractusx.managedidentitywallets.constant.RestURI;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.WalletSortColumn;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CreateWalletCommand;
-import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.GetWalletCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.StoreCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.dto.CreateWalletRequest;
@@ -50,12 +42,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Map;
@@ -95,7 +82,7 @@ public class WalletController extends BaseController {
      * Store credential response entity.
      *
      * @param data       the data
-     * @param identifier the identifier
+     * @param didOrBpn the identifier (a BPN or a DID)
      * @return the response entity
      */
     @PostMapping(path = RestURI.API_WALLETS_IDENTIFIER_CREDENTIALS, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -119,7 +106,7 @@ public class WalletController extends BaseController {
     /**
      * Gets wallet by bpn.
      *
-     * @param identifier      the identifier
+     * @param didOrBpn the identifier (a BPN or a DID)
      * @param withCredentials the with credentials
      * @return the wallet by bpn
      */

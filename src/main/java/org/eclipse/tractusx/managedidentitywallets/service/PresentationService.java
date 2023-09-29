@@ -103,25 +103,14 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
 
     /**
      * Create presentation map.
-     *
-     * @param data      the data
-     * @param asJwt     the as jwt
-     * @param audience  the audience
-     * @param callerBpn the caller bpn
-     * @return the map
+     * @param cmd the command containing all necessary data
+     * @return the JSON Object containing the representation represented as map
      */
     @SneakyThrows({InvalidePrivateKeyFormat.class})
     public Map<String, Object> createPresentation(CreatePresentationCommand cmd) {
-        //List<Map<String, Object>> verifiableCredentialList = (List<Map<String, Object>>) data.get(StringPool.VERIFIABLE_CREDENTIALS);
-
         //check if holder wallet is in the system
         Wallet callerWallet = commonService.getWalletByBPN(cmd.caller().value());
 
-//        List<VerifiableCredential> verifiableCredentials = new ArrayList<>(verifiableCredentialList.size());
-//        verifiableCredentialList.forEach(map -> {
-//            VerifiableCredential verifiableCredential = new VerifiableCredential(map);
-//            verifiableCredentials.add(verifiableCredential);
-//        });
 
         Map<String, Object> response = new HashMap<>();
         if (cmd.asJwt()) {
@@ -164,11 +153,8 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
     /**
      * Validate presentation map.
      *
-     * @param vp                       the vp
-     * @param asJwt                    the as jwt
-     * @param withCredentialExpiryDate the with credential expiry date
-     * @param audience                 the audience
-     * @return the map
+     * @param cmd the command containing all necessary data
+     * @return the JSON Object containing the validation result represented as map
      */
     @SneakyThrows
     public Map<String, Object> validatePresentation(
@@ -186,8 +172,6 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
 
         log.debug("Validating VP as JWT");
         //verify as jwt
-        //Validate.isNull(vp.get(StringPool.VP)).launch(new BadDataException("Can not find JWT"));
-        //String jwt = vp.get(StringPool.VP).toString();
         response.put(StringPool.VP, cmd.vpJwt().serialize());
 
         if(!(cmd.vpJwt() instanceof final SignedJWT signedJWT)){
@@ -208,7 +192,6 @@ public class PresentationService extends BaseService<HoldersCredential, Long> {
         boolean validateExpiryDate = true;
         try {
             ObjectMapper mapper = new ObjectMapper();
-//            Map<String, Object> claims = mapper.readValue(signedJWT.getPayload().toBytes(), Map.class);
             Map<String, Object> claims = signedJWT.getPayload().toJSONObject();
             String vpClaim = mapper.writeValueAsString(claims.get("vp"));
 

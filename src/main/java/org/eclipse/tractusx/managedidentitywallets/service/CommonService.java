@@ -23,16 +23,11 @@ package org.eclipse.tractusx.managedidentitywallets.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.tractusx.managedidentitywallets.constant.StringPool;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.WalletRepository;
-import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.exception.WalletNotFoundProblem;
-import org.eclipse.tractusx.managedidentitywallets.utils.CommonUtils;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
-import org.eclipse.tractusx.ssi.lib.exception.DidParseException;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.springframework.stereotype.Service;
 
@@ -49,8 +44,9 @@ public class CommonService {
     /**
      * Gets wallet by bpn.
      * 
-     * @param bpn
-     * @return
+     * @param bpn, the BPN to get the wallet for
+     * @return the wallet
+     * @throws WalletNotFoundProblem when wallet could not be found
      */
     public Wallet getWalletByBPN(String bpn) {
         Wallet wallet = walletRepository.getByBpn(bpn);
@@ -62,8 +58,9 @@ public class CommonService {
     /**
      * get wallet by did
      * 
-     * @param did
-     * @return
+     * @param did the BPN to get the wallet for
+     * @return the wallet
+     * @throws WalletNotFoundProblem when wallet could not be found
      */
     public Wallet getWalletByDid(String did) {
         Wallet wallet = walletRepository.getByDid(did);

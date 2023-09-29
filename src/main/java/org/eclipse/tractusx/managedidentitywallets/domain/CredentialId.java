@@ -31,8 +31,6 @@ public class CredentialId {
 
     private final String value;
 
-    // TODO make regex accept this
-    // did:web:localhost%3A49243:BPNL000000000000#a609938f-6d89-4e7f-aa40-9ca325c613be
     private static final String PATTERN = "^did:web:([a-z\\\\.]*\\b(%3A\\d{2,5})?\\b)\\b:BPNL[0-9a-f]{12}\\b#[0-9a-f]{8}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-[0-9a-f]{4}\\b-([0-9a-f]{12})$";
 
     public CredentialId(final String credentialId) {

@@ -122,7 +122,6 @@ public class HoldersCredentialController extends BaseController {
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO verfiy values of verifiableCredential
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(holdersCredentialService.issueCredential(

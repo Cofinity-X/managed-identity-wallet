@@ -52,11 +52,8 @@ public class DidDocumentController {
     /**
      * Gets did document.
      *
-     * @param identifier the identifier
+     * @param didOrBpn the identifier (a BPN or a DID)
      * @return the did document
-     */
-    /*
-        FIXME identifier is allowed to be a did or a bpn, otherwise illegal argument is thrown,  this should expect a 400 instead of a 500 in the test DidDocumentsTest.getDidDocumentInvalidBpn500()
      */
 
     @GetMapping(path = RestURI.DID_DOCUMENTS, produces = MediaType.APPLICATION_JSON_VALUE)

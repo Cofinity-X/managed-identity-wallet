@@ -23,7 +23,6 @@ package org.eclipse.tractusx.managedidentitywallets.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.ssi.lib.model.did.DidDocument;
@@ -42,7 +41,7 @@ public class DidDocumentService {
     /**
      * Gets did document by identifier(BPN or Did).
      *
-     * @param identifier the identifier
+     * @param didOrBpn the identifier (a BPN or a DID)
      * @return the did document
      */
     public DidDocument getDidDocument(Identifier didOrBpn) {
@@ -56,7 +55,7 @@ public class DidDocumentService {
     /**
      * Gets did document by BPN
      * 
-     * @param bpn
+     * @param bpn the BPN to get the DID document for
      */
     public DidDocument getDidDocumentByBPN(BPN bpn) {
         return commonService.getWalletByBPN(bpn.value()).getDidDocument();

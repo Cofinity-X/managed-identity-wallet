@@ -23,13 +23,9 @@ package org.eclipse.tractusx.managedidentitywallets.utils;
 
 import lombok.SneakyThrows;
 import org.eclipse.tractusx.managedidentitywallets.config.MIWSettings;
-import org.eclipse.tractusx.ssi.lib.crypt.IKeyGenerator;
-import org.eclipse.tractusx.ssi.lib.crypt.KeyPair;
-import org.eclipse.tractusx.ssi.lib.crypt.x21559.x21559Generator;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.util.Base64;
 

@@ -49,7 +49,6 @@ import org.eclipse.tractusx.managedidentitywallets.exception.DuplicateWalletProb
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
 import org.eclipse.tractusx.managedidentitywallets.utils.EncryptionUtils;
 import org.eclipse.tractusx.managedidentitywallets.utils.Validate;
-import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredentialType;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -103,9 +102,7 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Store credential map.
      *
-     * @param data       the data
-     * @param identifier the identifier
-     * @param callerBpn  the caller bpn
+     * @param cmd the command containing all necessary data
      * @return the map
      */
     public Map<String, String> storeCredential(StoreCredentialCommand cmd) {
@@ -146,7 +143,7 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Gets wallet by identifier.
      *
-     * @param identifier      the identifier
+     * @param didOrBpn      the identifier (a BPN or DID)
      * @param withCredentials the with credentials
      * @param callerBpn       the caller bpn
      * @return the wallet by identifier
@@ -174,10 +171,7 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Gets wallets.
      *
-     * @param pageNumber the page number
-     * @param size       the size
-     * @param sortColumn the sort column
-     * @param sortType   the sort type
+     * @param cmd the command containing all necessary data
      * @return the wallets
      */
     public Page<Wallet> getWallets(GetWalletCommand cmd) {
@@ -195,7 +189,7 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Create wallet wallet.
      *
-     * @param request the request
+     * @param cmd the command containing all necessary data
      * @return the wallet
      */
     @SneakyThrows
@@ -206,7 +200,10 @@ public class WalletService extends BaseService<Wallet, Long> {
     /**
      * Create wallet.
      *
-     * @param request the request
+     * @param bpn the bpn for which the wallet is created
+     * @param callerBpn the BPN of the entity creating the wallet
+     * @param name the name of the created wallet
+     * @param authority whether the holders credential is self-issued
      * @return the wallet
      */
     @SneakyThrows
@@ -224,7 +221,6 @@ public class WalletService extends BaseService<Wallet, Long> {
         String encryptedPrivateKey = walletAggregate.getEncryptedPrivateKey(encryptionUtils);
         String encryptedPublicKey = walletAggregate.getEncryptedPublicKey(encryptionUtils);
 
-        // FIXME this suddenly throws a DataIntegrityViolationException
         // Save wallet
         Wallet wallet = create(Wallet.builder()
                                      .didDocument(walletAggregate.getDocument())

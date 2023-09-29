@@ -25,8 +25,6 @@ import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * The interface Wallet repository.
  */

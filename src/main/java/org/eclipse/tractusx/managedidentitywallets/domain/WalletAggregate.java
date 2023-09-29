@@ -21,6 +21,7 @@
 
 package org.eclipse.tractusx.managedidentitywallets.domain;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -58,8 +59,10 @@ public class WalletAggregate {
 
     private final KeyPair keyPair;
 
+    @Getter
     private final String keyId = UUID.randomUUID().toString();
 
+    @Getter
     private final Did did;
 
     private WalletAggregate(Builder builder) {
@@ -78,21 +81,13 @@ public class WalletAggregate {
         return encryptionUtils.encrypt(getKeyString(keyPair.getPrivateKey().asByte(), "PRIVATE KEY"));
     }
 
-    public Did getDid() {
-        return did;
-    }
-
-    public String getKeyId() {
-        return keyId;
-    }
-
     public DidDocument getDocument() {
         JsonWebKey jwk = null;
 
         try {
             jwk = new JsonWebKey(keyId, keyPair.getPublicKey(), keyPair.getPrivateKey());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
 
         JWKVerificationMethod jwkVerificationMethod = new JWKVerificationMethodBuilder().did(did).jwk(jwk).build();
@@ -129,7 +124,7 @@ public class WalletAggregate {
         try {
             return keyGenerator.generateKey();
         } catch (KeyGenerationException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 

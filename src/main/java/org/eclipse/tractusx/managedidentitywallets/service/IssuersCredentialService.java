@@ -41,14 +41,11 @@ import org.eclipse.tractusx.managedidentitywallets.dao.entity.Wallet;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.HoldersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.dao.repository.IssuersCredentialRepository;
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
-
-import org.eclipse.tractusx.managedidentitywallets.domain.Identifier;
 import org.eclipse.tractusx.managedidentitywallets.domain.TypeToSearch;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.CredentialSearchCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueFrameworkCredentialCommand;
 import org.eclipse.tractusx.managedidentitywallets.domain.command.IssueMembershipCredentialCommand;
-import org.eclipse.tractusx.managedidentitywallets.dto.IssueFrameworkCredentialRequest;
 import org.eclipse.tractusx.managedidentitywallets.exception.BadDataException;
 import org.eclipse.tractusx.managedidentitywallets.exception.DuplicateCredentialProblem;
 import org.eclipse.tractusx.managedidentitywallets.exception.ForbiddenException;
@@ -73,13 +70,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.net.http.HttpClient;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * The type Issuers credential service.
@@ -249,9 +240,8 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
 
     /**
      * Issue framework credential verifiable credential.
-     *
-     * @param request   the request
-     * @param callerBPN the caller bpn
+     * @see org.eclipse.tractusx.managedidentitywallets.domain.command.IssueDismantlerCredentialCommand
+     * @param cmd the command containing all necessary validated data
      * @return the verifiable credential
      */
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
@@ -539,7 +529,7 @@ public class IssuersCredentialService extends BaseService<IssuersCredential, Lon
     /**
      * Credentials validation map.
      *
-     * @param data                     the data
+     * @param verifiableCredential the VC to validate
      * @param withCredentialExpiryDate the with credential expiry date
      * @return the map
      */

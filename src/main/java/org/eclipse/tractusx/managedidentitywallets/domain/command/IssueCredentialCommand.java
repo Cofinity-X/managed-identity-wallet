@@ -31,7 +31,7 @@ public abstract class IssueCredentialCommand {
 
     private final BPN caller;
 
-    public IssueCredentialCommand(final BPN bpn, final BPN caller) {
+    protected IssueCredentialCommand(final BPN bpn, final BPN caller) {
         this.bpn = bpn;
         this.caller = caller;
     }

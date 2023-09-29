@@ -23,7 +23,6 @@ package org.eclipse.tractusx.managedidentitywallets.domain.command;
 
 import org.eclipse.tractusx.managedidentitywallets.domain.BPN;
 import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredential;
-import org.eclipse.tractusx.ssi.lib.model.verifiable.credential.VerifiableCredentials;
 
 import java.util.List;
 import java.util.Objects;

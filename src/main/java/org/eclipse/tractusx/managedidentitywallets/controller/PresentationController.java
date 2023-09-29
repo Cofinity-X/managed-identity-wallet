@@ -148,7 +148,7 @@ public class PresentationController extends BaseController {
                     try {
                         builder.setVpJwt(JWTParser.parse((String) s));
                     } catch (ParseException e) {
-                        throw new RuntimeException(e);
+                        throw new IllegalArgumentException(e);
                     }
                 }, () -> {
                     Map<String, Object> m = new HashMap<>();

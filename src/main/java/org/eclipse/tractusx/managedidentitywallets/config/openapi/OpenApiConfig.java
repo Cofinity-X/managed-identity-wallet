@@ -99,12 +99,11 @@ public class OpenApiConfig {
         String accessTokenAuth = "Authenticate using access_token";
         components.addSecuritySchemes(accessTokenAuth,
                 new SecurityScheme().name(accessTokenAuth)
-                        .description("**Bearer (apiKey)** \n" +
-                                "JWT Authorization header using the Bearer scheme.\n" +
-                                "\n" +
-                                "Enter **Bearer** [space] and then your token in the text input below.\n" +
-                                "\n" +
-                                "Example: Bearer 12345abcdef")
+                        .description("""
+                                **Bearer (apiKey)**
+                                JWT Authorization header using the Bearer scheme.
+                                "Enter **Bearer** [space] and then your token in the text input below.
+                                "Example: Bearer 12345abcdef""")
                         .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.HEADER).name(HttpHeaders.AUTHORIZATION));
         return openAPI.components(components)
                 .addSecurityItem(new SecurityRequirement()
