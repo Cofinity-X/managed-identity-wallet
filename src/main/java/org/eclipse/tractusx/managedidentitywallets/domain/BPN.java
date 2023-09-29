@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  */
 public class BPN {
 
-    private static final String PATTERN = "^BPN[ALS][0-9a-f]{12}$";
+    private static final String PATTERN = "^BPN[ALS][0-9a-zA-Z]{12}$";
 
     private final String value;
 
