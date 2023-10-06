@@ -48,6 +48,7 @@ services:
       DB_NAME: ${POSTGRES_DB_NAME_MIW:-miw}
       DB_USER_NAME: ${POSTGRES_USERNAME_MIW:-miw_user}
       DB_PASSWORD: ${POSTGRES_PASSWORD_MIW:-miw_password}
+      ENFORCE_HTTPS_IN_DID_RESOLUTION: ${ENFORCE_HTTPS_IN_DID_RESOLUTION:-false}
     ports:
       - "8000:8000"
       - "8090:8090"
