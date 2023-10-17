@@ -205,7 +205,7 @@ class PresentationValidationTest {
     public void testValidationFailureOfCredentialWitInvalidExpirationDateInSecondCredential() {
         // test is related to this old issue where the signature check still succeeded
         // https://github.com/eclipse-tractusx/SSI-agent-lib/issues/4
-        final VerifiableCredential copyCredential = new VerifiableCredential(membershipCredential_1);
+        VerifiableCredential copyCredential = new VerifiableCredential(membershipCredential_1);
         // e.g. an attacker tries to extend the validity of a verifiable credential
         copyCredential.put(VerifiableCredential.EXPIRATION_DATE, "2500-09-30T22:00:00Z");
         final Map<String, Object> presentation = createPresentationJwt(

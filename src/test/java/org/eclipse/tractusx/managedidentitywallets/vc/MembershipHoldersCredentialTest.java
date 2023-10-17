@@ -53,7 +53,6 @@ import org.springframework.test.context.ContextConfiguration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {ManagedIdentityWalletsApplication.class})
 @ContextConfiguration(initializers = {TestContextInitializer.class})
@@ -99,7 +98,7 @@ class MembershipHoldersCredentialTest {
         String baseBpn = miwSettings.authorityWalletBpn().value();
 
         // create wallet, in background bpn and summary credential generated
-        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
+        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn).getBody());
 
         List<HoldersCredential> byHolderDid = holdersCredentialRepository.getByHolderDid(did);
 
@@ -128,7 +127,7 @@ class MembershipHoldersCredentialTest {
         String baseBpn = miwSettings.authorityWalletBpn().value();
 
         // create wallet, in background bpn and summary credential generated
-        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
+        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn).getBody());
 
 
         String vc = """
@@ -190,7 +189,7 @@ class MembershipHoldersCredentialTest {
         String baseBpn = miwSettings.authorityWalletBpn().value();
 
         // create wallet, in background bpn and summary credential generated
-        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
+        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn).getBody());
 
         //add 2 subject in VC for testing
         List<IssuersCredential> vcs = issuersCredentialRepository.getByIssuerDidAndHolderDidAndType(miwSettings.authorityWalletDid(), wallet.getDid(), MIWVerifiableCredentialType.SUMMARY_CREDENTIAL);
@@ -283,7 +282,7 @@ class MembershipHoldersCredentialTest {
         String baseBpn = miwSettings.authorityWalletBpn().value();
 
         //create wallet
-        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate,baseBpn).getBody());
+        Wallet wallet = TestUtils.getWalletFromString(TestUtils.createWallet(bpn, bpn, restTemplate, baseBpn).getBody());
         String oldSummaryCredentialId = TestUtils.getSummaryCredentialId(wallet.getDid(), holdersCredentialRepository);
 
         ResponseEntity<String> response = TestUtils.issueMembershipVC(restTemplate, bpn, miwSettings.authorityWalletBpn().value());
