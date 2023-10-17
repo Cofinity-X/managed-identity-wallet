@@ -62,11 +62,11 @@ class DidDocumentsTest {
     }
 
     @Test
-    void getDidDocumentInvalidBpn500() {
+    void getDidDocumentInvalidBpn400() {
         ResponseEntity<String> response = restTemplate.getForEntity(RestURI.DID_DOCUMENTS, String.class,
                                                                     UUID.randomUUID().toString()
         );
-        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
     }
 
     @Test
@@ -98,9 +98,11 @@ class DidDocumentsTest {
     }
 
     private Wallet createWallet(String bpn) {
-        CreateWalletRequest createWalletRequest = new CreateWalletRequest();
-        createWalletRequest.setBpn(bpn);
-        createWalletRequest.setName("wallet_" + bpn);
-        return walletService.createWallet(createWalletRequest, miwSettings.authorityWalletBpn());
+        CreateWalletCommand cmd = new CreateWalletCommand(
+                "wallet_" + bpn,
+                new BPN(bpn),
+                miwSettings.authorityWalletBpn()
+        );
+        return walletService.createWallet(cmd);
     }
 }
