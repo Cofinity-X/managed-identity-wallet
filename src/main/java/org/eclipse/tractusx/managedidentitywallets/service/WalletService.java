@@ -193,6 +193,7 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Wallet createWallet(CreateWalletCommand cmd) {
         return createWallet(cmd.bpn(), cmd.name(), false, cmd.caller());
     }
@@ -207,7 +208,6 @@ public class WalletService extends BaseService<Wallet, Long> {
      * @return the wallet
      */
     @SneakyThrows
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     private Wallet createWallet(BPN bpn, String name, boolean authority, BPN callerBpn) {
         validateCreateWallet(bpn, callerBpn);
 
