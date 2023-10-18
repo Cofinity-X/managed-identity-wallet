@@ -121,13 +121,4 @@ public class CommonUtils {
         // Create Credential
         return builder.build();
     }
-
-    public static String getIdentifierType(String identifier) {
-
-        if (identifier.startsWith("did:web")) {
-            return StringPool.DID;
-        } else {
-            return StringPool.BPN;
-        }
-    }
 }

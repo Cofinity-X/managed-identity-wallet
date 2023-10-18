@@ -59,5 +59,5 @@ public class DidDocumentService {
      */
     public DidDocument getDidDocumentByBPN(BPN bpn) {
         return commonService.getWalletByBPN(bpn.value()).getDidDocument();
-    }
+
 }
