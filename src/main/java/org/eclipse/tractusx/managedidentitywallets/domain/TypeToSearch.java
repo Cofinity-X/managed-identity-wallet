@@ -25,7 +25,11 @@ public enum TypeToSearch {
 
     BPN_CREDENTIAL("BpnCredential"),
     SUMMARY_CREDENTIAL("SummaryCredential"),
-    MEMBERSHIP_CREDENTIAL("MembershipCredential");
+    MEMBERSHIP_CREDENTIAL("MembershipCredential"),
+    DISMANTLER_CREDENTIAL("DismantlerCredential"),
+    FRAMEWORK_CREDENTIAL("FrameworkCredential");
+
+    
 
     public final String value;
 

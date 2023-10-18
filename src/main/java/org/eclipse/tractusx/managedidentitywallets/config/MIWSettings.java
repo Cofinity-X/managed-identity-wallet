@@ -36,128 +36,17 @@ import java.util.Set;
  * The type Miw settings.
  */
 @ConfigurationProperties(prefix = "miw")
-public class MIWSettings {
-
-    @NotNull
-    private String host;
-
-    @NotNull
-    private SecretKey encryptionKey;
-
-    private BPN authorityWalletBpn;
-
-    private String authorityWalletDid;
-
-    private String authorityWalletName;
-
-    private List<URI> vcContexts;
-
-    private List<URI> summaryVcContexts;
-
-    private @DateTimeFormat(pattern = "dd-MM-yyyy") Date vcExpiryDate;
-
-    private Set<String> supportedFrameworkVCTypes;
-
-    private boolean enforceHttps;
-
-    private String contractTemplatesUrl;
-
-    private List<URI> didDocumentContextUrls;
-
-
-    public String host() {
-        return host;
-    }
-
-    public void setHost(final String host) {
-        this.host = host;
-    }
-
-    public SecretKey encryptionKey() {
-        return encryptionKey;
-    }
-
-    public void setEncryptionKey(final SecretKey encryptionKey) {
-        this.encryptionKey = encryptionKey;
-    }
-
-    public BPN authorityWalletBpn() {
-        return authorityWalletBpn;
-    }
-
-    public void setAuthorityWalletBpn(final BPN authorityWalletBpn) {
-        this.authorityWalletBpn = authorityWalletBpn;
-    }
-
-    public String authorityWalletDid() {
-        return authorityWalletDid;
-    }
-
-    public void setAuthorityWalletDid(final String authorityWalletDid) {
-        this.authorityWalletDid = authorityWalletDid;
-    }
-
-    public String authorityWalletName() {
-        return authorityWalletName;
-    }
-
-    public void setAuthorityWalletName(final String authorityWalletName) {
-        this.authorityWalletName = authorityWalletName;
-    }
-
-    public List<URI> vcContexts() {
-        return vcContexts;
-    }
-
-    public void setVcContexts(final List<URI> vcContexts) {
-        this.vcContexts = vcContexts;
-    }
-
-    public List<URI> summaryVcContexts() {
-        return summaryVcContexts;
-    }
-
-    public void setSummaryVcContexts(final List<URI> summaryVcContexts) {
-        this.summaryVcContexts = summaryVcContexts;
-    }
-
-    public Date vcExpiryDate() {
-        return vcExpiryDate;
-    }
-
-    public void setVcExpiryDate(final Date vcExpiryDate) {
-        this.vcExpiryDate = vcExpiryDate;
-    }
-
-    public Set<String> supportedFrameworkVCTypes() {
-        return supportedFrameworkVCTypes;
-    }
-
-    public void setSupportedFrameworkVCTypes(final Set<String> supportedFrameworkVCTypes) {
-        this.supportedFrameworkVCTypes = supportedFrameworkVCTypes;
-    }
-
-    public boolean enforceHttps() {
-        return enforceHttps;
-    }
-
-    public void setEnforceHttps(final boolean enforceHttps) {
-        this.enforceHttps = enforceHttps;
-    }
-
-    public String contractTemplatesUrl() {
-        return contractTemplatesUrl;
-    }
-
-    public void setContractTemplatesUrl(final String contractTemplatesUrl) {
-        this.contractTemplatesUrl = contractTemplatesUrl;
-    }
-
-    public List<URI> didDocumentContextUrls() {
-        return didDocumentContextUrls;
-    }
-
-    public void setDidDocumentContextUrls(final List<URI> didDocumentContextUrls) {
-        this.didDocumentContextUrls = didDocumentContextUrls;
-    }
-}
+public record MIWSettings(
+        @NotNull String host,
+        @NotNull SecretKey encryptionKey,
+        BPN authorityWalletBpn,
+        String authorityWalletDid,
+        String authorityWalletName,
+        List<URI> vcContexts,
+        List<URI> summaryVcContexts,
+        @DateTimeFormat(pattern = "dd-MM-yyyy") Date vcExpiryDate,
+        Set<String> supportedFrameworkVCTypes,
+        boolean enforceHttps,
+        String contractTemplatesUrl,
+        List<URI> didDocumentContextUrls
+) {}
